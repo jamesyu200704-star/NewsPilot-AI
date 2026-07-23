@@ -1,0 +1,36 @@
+{
+  "name": "newspilot-ai",
+  "private": true,
+  "version": "0.1.0",
+  "description": "AI-assisted news topic planning and interview preparation tool for journalism students.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "dev:server": "tsx watch server/index.ts",
+    "build:server": "tsc -p tsconfig.server.json",
+    "build": "tsc -b && npm run build:server && vite build",
+    "start:server": "node dist-server/server/index.js",
+    "test:server": "npm run build:server && node --test dist-server/server/tests/validation.test.js dist-server/server/tests/generatorService.test.js dist-server/server/tests/openAIProvider.test.js dist-server/server/tests/api.test.js dist-server/server/tests/clientGenerator.test.js dist-server/server/tests/markdownExport.test.js",
+    "test": "npm run test:server",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@phosphor-icons/react": "^2.1.10",
+    "ajv": "^8.20.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.6.0",
+    "tsx": "^4.23.1",
+    "typescript": "^5.8.3",
+    "vite": "^7.0.4"
+  }
+}

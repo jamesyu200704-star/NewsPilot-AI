@@ -253,6 +253,8 @@ npm run preview
 - Build Command：`npm run build`
 - Output Directory：`dist`
 
+当前 GitHub 仓库已连接 Vercel；变更合并到 `main` 后会自动触发 Production 部署。
+
 使用 Vercel Dashboard 导入本仓库，或在项目根目录执行：
 
 ~~~bash

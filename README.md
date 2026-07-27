@@ -6,6 +6,12 @@ AI-assisted news topic planning and interview preparation tool for journalism st
 
 当前版本以浏览器本地 Mock 为默认运行方式，不需要后端或 API Key；需要真实 AI 生成时，可选接入独立的 Node.js Generator Service 与 OpenAI Provider。
 
+## Live Demo
+
+[打开 NewsPilot AI 在线演示](https://newspilot-ai-ashy.vercel.app)
+
+线上版本运行在 Vercel，固定使用浏览器本地 Mock 模式，不需要 API Key，也不会把用户输入发送到外部生成服务。
+
 ## 项目简介
 
 NewsPilot AI 聚焦新闻报道的前期准备，而不是替代采访、调查或事实核验。用户输入主题、受众、报道范围和背景信息后，系统生成“人物、制度、数据趋势”三个结构化角度，帮助使用者从想法快速进入采访准备。
@@ -237,6 +243,30 @@ npm run start:server
 # 预览前端构建
 npm run preview
 ~~~
+
+## Deployment
+
+仓库已提供 [`vercel.json`](vercel.json)，并固定使用以下构建设置：
+
+- Framework：Vite
+- Install Command：`npm install`
+- Build Command：`npm run build`
+- Output Directory：`dist`
+
+使用 Vercel Dashboard 导入本仓库，或在项目根目录执行：
+
+~~~bash
+npm install -g vercel
+vercel
+~~~
+
+公开演示建议在 Vercel 的 Production 环境中设置：
+
+~~~dotenv
+VITE_GENERATION_MODE=mock
+~~~
+
+该变量不是秘密；它只选择浏览器本地 Mock。不要在 Vercel 的前端环境中配置 `OPENAI_API_KEY`，也不要创建 `VITE_OPENAI_API_KEY`。若需要真实 AI Provider，应把服务端单独部署为受保护的 API，并通过服务端 Secret 注入密钥。
 
 ## 项目结构
 

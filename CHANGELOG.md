@@ -6,7 +6,21 @@
 
 ## [Unreleased]
 
-暂无未发布变更。
+### Added
+
+- OllamaProvider 与可配置的 Qwen 本地推理支持。
+- Demo / 本地 AI 页面模式选择、Ollama 错误提示与 Mock 自动降级。
+- Ollama JSON Schema 请求、JSON 解析重试、配置和前端分流测试。
+
+### Changed
+
+- Generator Service 改为 Express，并按路由、服务和 Provider 分层。
+- <code>npm run dev</code> 现在同时启动后端 API 与 Vite 前端。
+
+### Security
+
+- 忽略本地模型目录、Ollama 数据目录和环境文件。
+- 本地模型输出继续经过共享 JSON Schema 与服务端 Ajv 校验。
 
 ## [0.1.0] - 2026-07-22
 

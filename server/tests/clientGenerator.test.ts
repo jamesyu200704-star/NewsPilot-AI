@@ -25,6 +25,10 @@ test('前端 API 收到无效 2xx JSON 时降级到本地 Mock', async () => {
 
   assert.equal(result.mode, 'mock');
   assert.equal(result.angles.length, 3);
+  assert.equal(
+    result.fallbackNotice,
+    '无法连接本地生成服务，请确认项目后端已启动。已自动切换到 Demo 模式。',
+  );
 });
 
 test('前端 API 超时后中止请求并降级到本地 Mock', async () => {
@@ -51,4 +55,8 @@ test('前端 API 超时后中止请求并降级到本地 Mock', async () => {
 
   assert.equal(aborted, true);
   assert.equal(result.mode, 'mock');
+  assert.equal(
+    result.fallbackNotice,
+    '无法连接本地生成服务，请确认项目后端已启动。已自动切换到 Demo 模式。',
+  );
 });

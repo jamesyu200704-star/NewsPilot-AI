@@ -2,23 +2,38 @@ import { createApiServer } from './app.js';
 import { loadLocalEnvironment, readServerConfig } from './config.js';
 import type { GenerationProvider } from './providers/GenerationProvider.js';
 import { MockProvider } from './providers/MockProvider.js';
+import { OllamaProvider } from './providers/OllamaProvider.js';
 import { OpenAIProvider } from './providers/OpenAIProvider.js';
-import { GeneratorService } from './services/GeneratorService.js';
+import { GeneratorService } from './services/generator.js';
 
 loadLocalEnvironment();
 
 const config = readServerConfig();
 const mockProvider = new MockProvider();
-const primaryProvider: GenerationProvider =
-  config.provider === 'openai'
-    ? new OpenAIProvider({
-        apiKey: config.openAIApiKey,
-        model: config.openAIModel,
-        timeoutMs: config.openAITimeoutMs,
-      })
-    : mockProvider;
+const createPrimaryProvider = (): GenerationProvider => {
+  if (config.provider === 'ollama') {
+    return new OllamaProvider({
+      baseUrl: config.ollamaBaseUrl,
+      model: config.ollamaModel,
+      timeoutMs: config.ollamaTimeoutMs,
+    });
+  }
 
-const generatorService = new GeneratorService(primaryProvider, mockProvider);
+  if (config.provider === 'openai') {
+    return new OpenAIProvider({
+      apiKey: config.openAIApiKey,
+      model: config.openAIModel,
+      timeoutMs: config.openAITimeoutMs,
+    });
+  }
+
+  return mockProvider;
+};
+
+const generatorService = new GeneratorService(
+  createPrimaryProvider(),
+  mockProvider,
+);
 const server = createApiServer(generatorService);
 
 server.listen(config.port, config.host, () => {

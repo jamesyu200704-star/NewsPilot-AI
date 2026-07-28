@@ -9,7 +9,11 @@ import type {
 import type { GenerationProvider } from '../providers/GenerationProvider.js';
 import { MockProvider } from '../providers/MockProvider.js';
 import { OpenAIProvider } from '../providers/OpenAIProvider.js';
-import { GeneratorService } from '../services/GeneratorService.js';
+import { GeneratorService } from '../services/generator.js';
+import {
+  OllamaConnectionError,
+  OllamaModelNotFoundError,
+} from '../services/ollama.js';
 import { sampleInput } from './fixtures.js';
 
 class StaticProvider implements GenerationProvider {
@@ -91,4 +95,36 @@ test('主 Provider 返回无效结构时同样降级到 MockProvider', async () 
 
   const result = await service.generate(sampleInput);
   assert.equal(result.mode, 'mock');
+});
+
+test('Ollama 未启动时降级到 Mock 并返回启动提示', async () => {
+  const service = new GeneratorService(
+    new StaticProvider('ollama', new OllamaConnectionError()),
+    new MockProvider(),
+    silentLogger,
+  );
+
+  const result = await service.generate(sampleInput);
+
+  assert.equal(result.mode, 'mock');
+  assert.equal(
+    result.fallbackNotice,
+    '请启动 Ollama 服务。已自动切换到 Demo 模式。',
+  );
+});
+
+test('Ollama 模型不存在时降级到 Mock 并返回下载提示', async () => {
+  const service = new GeneratorService(
+    new StaticProvider('ollama', new OllamaModelNotFoundError()),
+    new MockProvider(),
+    silentLogger,
+  );
+
+  const result = await service.generate(sampleInput);
+
+  assert.equal(result.mode, 'mock');
+  assert.equal(
+    result.fallbackNotice,
+    '请下载对应模型。已自动切换到 Demo 模式。',
+  );
 });

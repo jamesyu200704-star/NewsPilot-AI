@@ -17,8 +17,10 @@
   },
   "include": [
     "server/**/*.ts",
+    "prompts/**/*.ts",
     "shared/**/*.ts",
     "src/services/apiGenerator.ts",
+    "src/services/generationMode.ts",
     "src/types/index.ts",
     "src/utils/markdownExport.ts"
   ]

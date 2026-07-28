@@ -5,7 +5,7 @@ import test from 'node:test';
 import { createApiServer } from '../app.js';
 import type { GenerationProvider } from '../providers/GenerationProvider.js';
 import { MockProvider } from '../providers/MockProvider.js';
-import { GeneratorService } from '../services/GeneratorService.js';
+import { GeneratorService } from '../services/generator.js';
 import { sampleInput } from './fixtures.js';
 
 const listen = async (server: Server) => {

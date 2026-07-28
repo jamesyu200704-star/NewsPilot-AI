@@ -31,7 +31,7 @@ export function EmptyState({
     <section className="empty-state" aria-labelledby="empty-state-title">
       <div className="empty-state__topline">
         <span>从线索到采访</span>
-        <span>{generationMode === 'api' ? 'API 在线' : '本地演示'}</span>
+        <span>{generationMode === 'local-ai' ? '本地 AI' : 'Demo 模式'}</span>
       </div>
 
       <div className="empty-state__statement">

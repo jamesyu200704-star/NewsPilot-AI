@@ -15,7 +15,11 @@ const angleKeys = new Set([
   'risks',
   'nextActions',
 ]);
-const resultKeys = new Set(['topicSummary', 'angles', 'generatedAt', 'mode']);
+const requiredResultKeys = new Set(['topicSummary', 'angles', 'generatedAt', 'mode']);
+const allowedResultKeys = new Set([
+  ...requiredResultKeys,
+  'fallbackNotice',
+]);
 const angleIds: StoryAngleId[] = ['people', 'system', 'trend'];
 
 const isRecord = (value: unknown): value is JsonRecord =>
@@ -26,6 +30,18 @@ const hasExactKeys = (value: JsonRecord, expectedKeys: Set<string>) => {
   return (
     keys.length === expectedKeys.size &&
     keys.every((key) => expectedKeys.has(key))
+  );
+};
+
+const hasAllowedAndRequiredKeys = (
+  value: JsonRecord,
+  allowedKeys: Set<string>,
+  requiredKeys: Set<string>,
+) => {
+  const keys = Object.keys(value);
+  return (
+    keys.every((key) => allowedKeys.has(key)) &&
+    [...requiredKeys].every((key) => Object.hasOwn(value, key))
   );
 };
 
@@ -65,7 +81,10 @@ const isStoryAngle = (value: unknown, expectedId: StoryAngleId): value is StoryA
 export const isRuntimeGenerationResult = (
   value: unknown,
 ): value is GenerationResult => {
-  if (!isRecord(value) || !hasExactKeys(value, resultKeys)) {
+  if (
+    !isRecord(value) ||
+    !hasAllowedAndRequiredKeys(value, allowedResultKeys, requiredResultKeys)
+  ) {
     return false;
   }
 
@@ -76,7 +95,11 @@ export const isRuntimeGenerationResult = (
     value.angles.every((angle, index) => isStoryAngle(angle, angleIds[index])) &&
     typeof value.generatedAt === 'string' &&
     !Number.isNaN(Date.parse(value.generatedAt)) &&
-    (value.mode === 'mock' || value.mode === 'openai')
+    (value.mode === 'mock' ||
+      value.mode === 'ollama' ||
+      value.mode === 'openai') &&
+    (!Object.hasOwn(value, 'fallbackNotice') ||
+      isBoundedText(value.fallbackNotice, 240))
   );
 };
 

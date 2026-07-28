@@ -70,7 +70,12 @@ export function buildMarkdown(input: BriefInput, result: GenerationResult): stri
   const backgroundSection = input.background
     ? ['### 补充背景', '', escapeMarkdownText(input.background), '']
     : [];
-  const generationMode = result.mode === 'openai' ? 'OpenAI' : 'Mock';
+  const generationMode =
+    result.mode === 'openai'
+      ? 'OpenAI'
+      : result.mode === 'ollama'
+        ? 'Ollama'
+        : 'Mock';
 
   return [
     '# ' + escapeMarkdownText(input.topic) + '｜新闻选题方案',

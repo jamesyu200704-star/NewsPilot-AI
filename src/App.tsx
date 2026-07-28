@@ -4,7 +4,11 @@ import { Header } from './components/Header';
 import { LoadingState } from './components/LoadingState';
 import { ResultSection } from './components/ResultSection';
 import { TopicForm } from './components/TopicForm';
-import { clientGenerationMode, generateBrief } from './services/generator';
+import {
+  clientGenerationMode,
+  generateBrief,
+  type ClientGenerationMode,
+} from './services/generator';
 import type { BriefInput, GenerationResult } from './types';
 
 const initialBrief: BriefInput = {
@@ -22,6 +26,8 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [generationError, setGenerationError] = useState('');
+  const [generationMode, setGenerationMode] =
+    useState<ClientGenerationMode>(clientGenerationMode);
   const resultRegionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -69,7 +75,7 @@ export default function App() {
         ...brief,
         topic: brief.topic.trim().replace(/\s+/g, ' '),
       };
-      const generatedResult = await generateBrief(submittedBrief);
+      const generatedResult = await generateBrief(submittedBrief, generationMode);
       setGeneratedBrief(submittedBrief);
       setResult(generatedResult);
     } catch {
@@ -86,9 +92,14 @@ export default function App() {
     });
   };
 
+  const handleGenerationModeChange = (nextMode: ClientGenerationMode) => {
+    setGenerationMode(nextMode);
+    setGenerationError('');
+  };
+
   return (
     <div className="app-shell">
-      <Header generationMode={clientGenerationMode} />
+      <Header generationMode={generationMode} />
       <main className="workspace">
         <div className="input-workspace">
           <TopicForm
@@ -96,8 +107,9 @@ export default function App() {
             error={error}
             generationError={generationError}
             isLoading={isLoading}
-            generationMode={clientGenerationMode}
+            generationMode={generationMode}
             onChange={handleBriefChange}
+            onGenerationModeChange={handleGenerationModeChange}
             onSubmit={handleGenerate}
           />
         </div>
@@ -111,7 +123,7 @@ export default function App() {
             <EmptyState
               onSelect={handleExampleSelect}
               disabled={isLoading}
-              generationMode={clientGenerationMode}
+              generationMode={generationMode}
             />
           )}
         </div>
@@ -120,8 +132,8 @@ export default function App() {
       <footer className="site-footer">
         <span>NewsPilot AI</span>
         <p>
-          {clientGenerationMode === 'api'
-            ? '输入经服务端处理，生成内容需独立核验'
+          {generationMode === 'local-ai'
+            ? '输入由本机 Ollama 处理，生成内容需独立核验'
             : '本地模拟，不上传数据，生成内容需独立核验'}
         </p>
       </footer>

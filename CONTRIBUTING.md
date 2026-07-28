@@ -36,17 +36,9 @@ Copy-Item .env.example .env.local
 npm run dev
 ~~~
 
-如需验证 Node.js Generator Service，在两个终端分别运行：
+<code>npm run dev</code> 会同时启动 Express Generator Service 与 Vite 前端。仅调试其中一侧时，可分别使用 <code>npm run dev:server</code> 或 <code>npm run dev:web</code>。
 
-~~~bash
-npm run dev:server
-~~~
-
-~~~bash
-npm run dev
-~~~
-
-使用 API 模式前，按 README 的环境配置说明设置 <code>VITE_GENERATION_MODE</code> 与 <code>GENERATION_PROVIDER</code>。
+使用本地 AI 模式前，先安装并启动 Ollama，再按 README 设置 <code>GENERATION_MODE=ollama</code>、<code>OLLAMA_BASE_URL</code> 与 <code>OLLAMA_MODEL</code>。不要提交本机模型、Ollama 数据目录或环境文件。
 
 ## 提交 Issue
 
@@ -57,7 +49,7 @@ npm run dev
 - 清晰的问题描述和预期行为
 - 最小复现步骤
 - Node.js、浏览器和操作系统版本
-- 使用的运行模式：本地 Mock、服务端 Mock 或 OpenAI
+- 使用的运行模式：Demo、服务端 Mock、Ollama 或 OpenAI
 - 已脱敏的日志、截图或请求示例
 - 你愿意提出的解决方向
 
@@ -126,4 +118,3 @@ npm run preview
 - 示例必须可以复制执行，并使用占位符代替秘密。
 - 截图更新遵循 [docs/SCREENSHOT_GUIDE.md](docs/SCREENSHOT_GUIDE.md)。
 - 变更用户可见行为时，在 [CHANGELOG.md](CHANGELOG.md) 的 Unreleased 部分记录。
-

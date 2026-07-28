@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 
-export type ServerProviderMode = 'mock' | 'openai';
+export type ServerProviderMode = 'mock' | 'ollama' | 'openai';
 
 export interface ServerConfig {
   host: string;
@@ -9,6 +9,9 @@ export interface ServerConfig {
   openAIApiKey?: string;
   openAIModel: string;
   openAITimeoutMs: number;
+  ollamaBaseUrl: string;
+  ollamaModel: string;
+  ollamaTimeoutMs: number;
 }
 
 export const loadLocalEnvironment = () => {
@@ -24,16 +27,33 @@ const toPositiveInteger = (value: string | undefined, fallback: number) => {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
 };
 
-export const readServerConfig = (): ServerConfig => {
-  const rawProvider = process.env.GENERATION_PROVIDER?.trim().toLowerCase();
-  const provider: ServerProviderMode = rawProvider === 'openai' ? 'openai' : 'mock';
+const withoutTrailingSlash = (value: string) => value.replace(/\/+$/u, '');
+
+export const readServerConfig = (
+  environment: NodeJS.ProcessEnv = process.env,
+): ServerConfig => {
+  const rawProvider = (
+    environment.GENERATION_MODE ??
+    environment.GENERATION_PROVIDER
+  )
+    ?.trim()
+    .toLowerCase();
+  const provider: ServerProviderMode =
+    rawProvider === 'ollama' || rawProvider === 'openai'
+      ? rawProvider
+      : 'mock';
 
   return {
-    host: process.env.SERVER_HOST?.trim() || '127.0.0.1',
-    port: toPositiveInteger(process.env.SERVER_PORT, 8787),
+    host: environment.SERVER_HOST?.trim() || '127.0.0.1',
+    port: toPositiveInteger(environment.SERVER_PORT, 8787),
     provider,
-    openAIApiKey: process.env.OPENAI_API_KEY,
-    openAIModel: process.env.OPENAI_MODEL?.trim() || 'gpt-5.6-terra',
-    openAITimeoutMs: toPositiveInteger(process.env.OPENAI_TIMEOUT_MS, 30_000),
+    openAIApiKey: environment.OPENAI_API_KEY,
+    openAIModel: environment.OPENAI_MODEL?.trim() || 'gpt-5.6-terra',
+    openAITimeoutMs: toPositiveInteger(environment.OPENAI_TIMEOUT_MS, 30_000),
+    ollamaBaseUrl: withoutTrailingSlash(
+      environment.OLLAMA_BASE_URL?.trim() || 'http://localhost:11434',
+    ),
+    ollamaModel: environment.OLLAMA_MODEL?.trim() || 'qwen3:8b',
+    ollamaTimeoutMs: toPositiveInteger(environment.OLLAMA_TIMEOUT_MS, 90_000),
   };
 };

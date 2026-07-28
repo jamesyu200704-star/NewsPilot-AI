@@ -7,7 +7,7 @@ export interface BriefInput {
 }
 
 export type StoryAngleId = 'people' | 'system' | 'trend';
-export type GenerationMode = 'mock' | 'openai';
+export type GenerationMode = 'mock' | 'ollama' | 'openai';
 
 export interface StoryAngle {
   id: StoryAngleId;
@@ -31,13 +31,16 @@ export interface GenerationContent {
 export interface GenerationResult extends GenerationContent {
   generatedAt: string;
   mode: GenerationMode;
+  fallbackNotice?: string;
 }
+
+const nonBlankPattern = '^.*\\S.*$';
 
 const nonEmptyString = {
   type: 'string',
   minLength: 1,
   maxLength: 1600,
-  pattern: '\\S',
+  pattern: nonBlankPattern,
 } as const;
 
 const fixedStringArray = (size: number) => ({
@@ -51,8 +54,18 @@ export const briefInputJsonSchema = {
   type: 'object',
   additionalProperties: false,
   properties: {
-    topic: { type: 'string', minLength: 1, maxLength: 120, pattern: '\\S' },
-    reportType: { type: 'string', minLength: 1, maxLength: 40, pattern: '\\S' },
+    topic: {
+      type: 'string',
+      minLength: 1,
+      maxLength: 120,
+      pattern: nonBlankPattern,
+    },
+    reportType: {
+      type: 'string',
+      minLength: 1,
+      maxLength: 40,
+      pattern: nonBlankPattern,
+    },
     audience: { type: 'string', maxLength: 40 },
     scope: { type: 'string', maxLength: 40 },
     background: { type: 'string', maxLength: 600 },
@@ -65,7 +78,12 @@ export const storyAngleJsonSchema = {
   additionalProperties: false,
   properties: {
     id: { type: 'string', enum: ['people', 'system', 'trend'] },
-    title: { type: 'string', minLength: 1, maxLength: 240, pattern: '\\S' },
+    title: {
+      type: 'string',
+      minLength: 1,
+      maxLength: 240,
+      pattern: nonBlankPattern,
+    },
     perspective: nonEmptyString,
     newsValueScore: { type: 'number', minimum: 0, maximum: 5 },
     whyWorthReporting: nonEmptyString,
@@ -99,7 +117,7 @@ export const generationContentJsonSchema = {
       type: 'string',
       minLength: 1,
       maxLength: 800,
-      pattern: '\\S',
+      pattern: nonBlankPattern,
     },
     angles: {
       type: 'array',
@@ -117,7 +135,13 @@ export const generationResultJsonSchema = {
   properties: {
     ...generationContentJsonSchema.properties,
     generatedAt: { type: 'string', minLength: 1 },
-    mode: { type: 'string', enum: ['mock', 'openai'] },
+    mode: { type: 'string', enum: ['mock', 'ollama', 'openai'] },
+    fallbackNotice: {
+      type: 'string',
+      minLength: 1,
+      maxLength: 240,
+      pattern: nonBlankPattern,
+    },
   },
   required: ['topicSummary', 'angles', 'generatedAt', 'mode'],
 } as const;

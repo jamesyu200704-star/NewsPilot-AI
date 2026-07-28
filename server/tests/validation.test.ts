@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { generationContentJsonSchema } from '../../shared/generation.js';
 import { createMockGenerationResult } from '../../shared/mockGeneration.js';
 import { assertRuntimeGenerationResult } from '../../shared/runtimeGenerationValidation.js';
 import {
@@ -8,6 +9,39 @@ import {
   SchemaValidationError,
 } from '../validation.js';
 import { sampleInput } from './fixtures.js';
+
+const collectPatterns = (value: unknown, patterns: string[] = []) => {
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectPatterns(item, patterns));
+    return patterns;
+  }
+
+  if (typeof value !== 'object' || value === null) {
+    return patterns;
+  }
+
+  for (const [key, item] of Object.entries(value)) {
+    if (key === 'pattern' && typeof item === 'string') {
+      patterns.push(item);
+    } else {
+      collectPatterns(item, patterns);
+    }
+  }
+
+  return patterns;
+};
+
+test('Ollama 使用的 JSON Schema 正则全部带有首尾锚点', () => {
+  const patterns = collectPatterns(generationContentJsonSchema);
+
+  assert.ok(patterns.length > 0);
+  assert.deepEqual(
+    patterns.filter(
+      (pattern) => !pattern.startsWith('^') || !pattern.endsWith('$'),
+    ),
+    [],
+  );
+});
 
 test('合法输入与 Mock 结果通过 JSON Schema 校验', () => {
   assert.doesNotThrow(() => assertBriefInput(sampleInput));

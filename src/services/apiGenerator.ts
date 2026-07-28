@@ -57,6 +57,11 @@ export async function generateApiBriefWithFallback(
       '[NewsPilot] API 生成失败，已降级为浏览器本地 Mock。',
       error,
     );
-    return options.fallback(input);
+    const fallbackResult = await options.fallback(input);
+    return {
+      ...fallbackResult,
+      fallbackNotice:
+        '无法连接本地生成服务，请确认项目后端已启动。已自动切换到 Demo 模式。',
+    };
   }
 }

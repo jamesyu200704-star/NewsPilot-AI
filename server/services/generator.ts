@@ -1,6 +1,7 @@
 import type { BriefInput, GenerationResult } from '../../shared/generation.js';
 import { assertGenerationResult } from '../validation.js';
 import type { GenerationProvider } from '../providers/GenerationProvider.js';
+import { getOllamaUserMessage } from './ollama.js';
 
 interface ServiceLogger {
   warn(message: string): void;
@@ -43,7 +44,19 @@ export class GeneratorService {
 
       const fallbackResult = await this.fallbackProvider.generate(input);
       assertGenerationResult(fallbackResult);
-      return fallbackResult;
+      const ollamaUserMessage =
+        this.primaryProvider.name === 'ollama'
+          ? getOllamaUserMessage(error)
+          : undefined;
+      const finalResult: GenerationResult = ollamaUserMessage
+        ? {
+            ...fallbackResult,
+            fallbackNotice:
+              ollamaUserMessage + '已自动切换到 Demo 模式。',
+          }
+        : fallbackResult;
+      assertGenerationResult(finalResult);
+      return finalResult;
     }
   }
 }

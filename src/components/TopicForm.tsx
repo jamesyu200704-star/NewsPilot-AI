@@ -17,6 +17,7 @@ interface TopicFormProps {
   isLoading: boolean;
   generationMode?: ClientGenerationMode;
   onChange: (nextValue: BriefInput) => void;
+  onGenerationModeChange: (nextMode: ClientGenerationMode) => void;
   onSubmit: () => void;
 }
 
@@ -29,6 +30,7 @@ export function TopicForm({
   isLoading,
   generationMode = 'mock',
   onChange,
+  onGenerationModeChange,
   onSubmit,
 }: TopicFormProps) {
   const updateField = <Key extends keyof BriefInput>(
@@ -52,6 +54,40 @@ export function TopicForm({
       </header>
 
       <form className="topic-form" onSubmit={handleSubmit} noValidate>
+        <fieldset className="field generation-modes">
+          <legend>生成方式</legend>
+          <div className="generation-modes__options">
+            <label>
+              <input
+                type="radio"
+                name="generationMode"
+                value="mock"
+                checked={generationMode === 'mock'}
+                onChange={() => onGenerationModeChange('mock')}
+                disabled={isLoading}
+              />
+              <span>
+                <strong>Demo 模式</strong>
+                <small>浏览器本地模拟，无需配置模型</small>
+              </span>
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="generationMode"
+                value="local-ai"
+                checked={generationMode === 'local-ai'}
+                onChange={() => onGenerationModeChange('local-ai')}
+                disabled={isLoading}
+              />
+              <span>
+                <strong>本地 AI 模式</strong>
+                <small>通过后端调用本机 Ollama / Qwen</small>
+              </span>
+            </label>
+          </div>
+        </fieldset>
+
         <div className="field field--topic">
             <label htmlFor="topic">
               新闻主题
@@ -175,8 +211,8 @@ export function TopicForm({
             </button>
             <p>
               <LockKey aria-hidden="true" weight="bold" />
-              {generationMode === 'api'
-                ? 'API 模式会将输入发送至服务端处理，请勿填写敏感个人信息。'
+              {generationMode === 'local-ai'
+                ? '本地 AI 模式会把输入发送到本机后端与 Ollama，请勿填写敏感个人信息。'
                 : '所有内容在本地模拟生成，不会上传或保存。'}
             </p>
           </div>

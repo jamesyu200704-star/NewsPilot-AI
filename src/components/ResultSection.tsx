@@ -1,4 +1,9 @@
-import { Check, Copy, DownloadSimple } from '@phosphor-icons/react';
+import {
+  Check,
+  Copy,
+  DownloadSimple,
+  WarningCircle,
+} from '@phosphor-icons/react';
 import { useEffect, useRef, useState } from 'react';
 import type { BriefInput, GenerationResult } from '../types';
 import { copyText } from '../utils/copy';
@@ -93,6 +98,13 @@ export function ResultSection({ input, result }: ResultSectionProps) {
           </div>
         </div>
       </header>
+
+      {result.fallbackNotice ? (
+        <div className="results__notice" role="status">
+          <WarningCircle aria-hidden="true" weight="fill" />
+          <p>{result.fallbackNotice}</p>
+        </div>
+      ) : null}
 
       <div className="results__cards">
         {result.angles.map((angle, index) => (

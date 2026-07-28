@@ -15,7 +15,7 @@
     "build:server": "tsc -p tsconfig.server.json",
     "build": "tsc -b && npm run build:server && vite build",
     "start:server": "node dist-server/server/index.js",
-    "test:server": "npm run build:server && node --test dist-server/server/tests/validation.test.js dist-server/server/tests/config.test.js dist-server/server/tests/generatorService.test.js dist-server/server/tests/ollamaProvider.test.js dist-server/server/tests/openAIProvider.test.js dist-server/server/tests/api.test.js dist-server/server/tests/clientGenerator.test.js dist-server/server/tests/clientMode.test.js dist-server/server/tests/markdownExport.test.js",
+    "test:server": "npm run build:server && node --test dist-server/server/tests/validation.test.js dist-server/server/tests/config.test.js dist-server/server/tests/generatorService.test.js dist-server/server/tests/ollamaProvider.test.js dist-server/server/tests/openAIProvider.test.js dist-server/server/tests/api.test.js dist-server/server/tests/clientGenerator.test.js dist-server/server/tests/clientMode.test.js dist-server/server/tests/clientProviderStatus.test.js dist-server/server/tests/markdownExport.test.js",
     "test": "npm run test:server",
     "preview": "vite preview"
   },
@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
-    "@types/node": "^26.1.1",
+    "@types/node": "^26.1.2",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.6.0",

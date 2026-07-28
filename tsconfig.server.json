@@ -21,6 +21,7 @@
     "shared/**/*.ts",
     "src/services/apiGenerator.ts",
     "src/services/generationMode.ts",
+    "src/services/providerStatus.ts",
     "src/types/index.ts",
     "src/utils/markdownExport.ts"
   ]

@@ -37,7 +37,7 @@ NewsPilot AI 将准备过程组织为：
 - 每个角度包含新闻价值、采访对象、采访问题、事实核查清单、风险提醒和下一步行动。
 - 支持复制单个角度、复制完整方案和导出 UTF-8 Markdown 文件。
 - 默认使用浏览器本地 Mock，不上传输入，也不需要 API Key。
-- 页面可随时选择 Demo 模式或本地 AI 模式；默认保持 Demo。
+- 页面会通过健康检查识别 Ollama、OpenAI 或未连接状态；只有真实 AI 后端就绪时才允许选择对应 AI 模式。
 - Express Generator Service 通过 Provider 层支持 Mock、Ollama 与原有 OpenAI Provider。
 - Ollama 使用本机 Qwen 与 JSON Schema Structured Outputs，不需要付费 API 或上传模型权重。
 - Ollama/OpenAI 失败时服务端降级到 MockProvider；API 不可用时前端继续降级到浏览器本地 Mock。
@@ -84,11 +84,11 @@ flowchart LR
     R --> F
 ~~~
 
-实际运行包含两种路径：
+实际运行包含三种路径：
 
 - **本地 Mock**：<code>src/services/generator.ts</code> 直接调用共享 Mock 生成器，完全在浏览器运行。
-- **本地 AI**：React 前端调用 <code>POST /api/generate</code>，Express API 经 <code>GeneratorService</code> 调用 OllamaProvider 与本机 Qwen。
-- **兼容 Provider**：服务端仍可通过配置选择 MockProvider 或原有 OpenAIProvider，后续可继续增加其他模型 Provider。
+- **Ollama 本地 AI**：React 前端调用 <code>POST /api/generate</code>，Express API 经 <code>GeneratorService</code> 调用 OllamaProvider 与本机 Qwen。
+- **OpenAI**：服务端可选择 OpenAIProvider；页面会明确显示云端 Provider 和数据去向，不会误标为本地处理。
 
 共享的 <code>BriefInput</code>、<code>GenerationResult</code> 和 JSON Schema 位于 <code>shared/generation.ts</code>。服务端只向 Provider 传递通过输入 Schema 校验的数据，并在返回 API 响应前再次校验完整结果。
 
@@ -106,8 +106,8 @@ flowchart LR
 ### V0.1 Open Source Release
 
 - 默认模式：浏览器本地 Mock。
-- 可选模式：Express Generator Service + Ollama/Qwen 本地推理。
-- 兼容模式：原有 OpenAI Provider。
+- 可选模式：Express Generator Service + Ollama/Qwen 本地推理或 OpenAI Provider。
+- Provider 状态：页面通过 <code>GET /api/health</code> 自动识别；不可用时禁用 AI 选项并安全回到 Demo。
 - 当前包版本：<code>0.1.0</code>。
 - 当前不包含账号、权限、数据库、历史记录或生产级 API 网关。
 
@@ -164,7 +164,7 @@ npm run build
 ### 2. 下载默认 Qwen 模型
 
 ~~~bash
-ollama pull qwen3:8b
+ollama pull qwen2.5:1.5b
 ~~~
 
 模型名称不写死在代码中。需要使用其他本地模型时，先执行 <code>ollama pull &lt;模型名&gt;</code>，再修改 <code>OLLAMA_MODEL</code>。
@@ -176,7 +176,7 @@ ollama pull qwen3:8b
 ~~~dotenv
 GENERATION_MODE=ollama
 OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_MODEL=qwen3:8b
+OLLAMA_MODEL=qwen2.5:1.5b
 ~~~
 
 ### 4. 启动 Ollama 和项目
@@ -190,11 +190,11 @@ npm install
 npm run dev
 ~~~
 
-打开页面后选择“本地 AI 模式”并生成。若 Ollama 未启动、模型不存在、返回 JSON 非法或请求失败，应用会给出可操作提示并自动降级到 Demo；JSON 解析失败会先自动重试一次。
+打开页面后选择“Ollama 本地 AI”并生成。若 Ollama 未启动、模型不存在、返回 JSON 非法或请求失败，应用会给出可操作提示并自动降级到 Demo；JSON 解析失败会先自动重试一次。
 
 ### 支持哪些模型
 
-默认模型是 <code>qwen3:8b</code>。也支持其他已安装、能够遵循所提供 JSON Schema 的 Ollama 聊天模型；只需修改 <code>OLLAMA_MODEL</code>，无需改代码。模型实际可用性取决于 Ollama 版本、模型能力和本机内存。
+默认模型是已完成真实链路验证、对普通电脑更友好的 <code>qwen2.5:1.5b</code>。如果设备内存充足并希望获得更好的策划质量，可改用 <code>qwen3:8b</code>。也支持其他已安装、能够遵循所提供 JSON Schema 的 Ollama 聊天模型；只需修改 <code>OLLAMA_MODEL</code>，无需改代码。模型实际可用性取决于 Ollama 版本、模型能力和本机内存。
 
 ## 环境配置
 
@@ -228,14 +228,14 @@ OPENAI_MODEL=gpt-5.6-terra
 
 | 变量 | 默认值 | 读取位置 | 说明 |
 | --- | --- | --- | --- |
-| <code>VITE_GENERATION_MODE</code> | <code>mock</code> | 浏览器 | <code>mock</code> 默认选中 Demo；<code>local-ai</code> 默认选中本地 AI。页面仍可手动切换；兼容旧值 <code>api</code>。 |
+| <code>VITE_GENERATION_MODE</code> | <code>mock</code> | 浏览器 | <code>mock</code> 默认选中 Demo；<code>local-ai</code> 在健康检查确认 AI 后端可用后默认选中 AI。不可用时回到 Demo；兼容旧值 <code>api</code>。 |
 | <code>VITE_API_PROXY_TARGET</code> | <code>http://127.0.0.1:8787</code> | Vite 开发服务器 | 本地开发 API 代理地址，不得包含密钥。 |
 | <code>VITE_API_TIMEOUT_MS</code> | <code>120000</code> | 浏览器 | API 请求超时，默认覆盖本地模型首次加载时间；超时后降级到本地 Mock。 |
 | <code>GENERATION_MODE</code> | <code>mock</code> | 服务端 | <code>mock</code>、<code>ollama</code> 或 <code>openai</code>；其他值按 <code>mock</code> 处理。 |
 | <code>SERVER_HOST</code> | <code>127.0.0.1</code> | 服务端 | Generator Service 监听地址。 |
 | <code>SERVER_PORT</code> | <code>8787</code> | 服务端 | Generator Service 监听端口。 |
 | <code>OLLAMA_BASE_URL</code> | <code>http://localhost:11434</code> | 服务端 | 本机 Ollama REST API 地址。 |
-| <code>OLLAMA_MODEL</code> | <code>qwen3:8b</code> | 服务端 | 本机已下载的模型名称，可自由替换。 |
+| <code>OLLAMA_MODEL</code> | <code>qwen2.5:1.5b</code> | 服务端 | 已验证的轻量默认模型；可按设备能力替换。 |
 | <code>OLLAMA_TIMEOUT_MS</code> | <code>90000</code> | 服务端 | 单次本地模型请求超时，单位毫秒。 |
 | <code>OPENAI_API_KEY</code> | 未设置 | 服务端 | 仅 OpenAIProvider 使用；缺失时服务端降级到 MockProvider。 |
 | <code>OPENAI_MODEL</code> | <code>gpt-5.6-terra</code> | 服务端 | Responses API 模型名称。 |
@@ -299,11 +299,11 @@ npm run preview
 仓库已提供 [`vercel.json`](vercel.json)，并固定使用以下构建设置：
 
 - Framework：Vite
-- Install Command：`npm install`
+- Install Command：`npm ci`
 - Build Command：`npm run build`
 - Output Directory：`dist`
 
-当前 GitHub 仓库已连接 Vercel；变更合并到 `main` 后会自动触发 Production 部署。
+当前 GitHub 仓库已连接 Vercel；变更合并到 `main` 后会自动触发 Production 部署。Vercel 配置还会为所有静态响应添加 CSP、防嵌入、MIME 嗅探保护、Referrer Policy 与 Permissions Policy。
 
 使用 Vercel Dashboard 导入本仓库，或在项目根目录执行：
 

@@ -7,6 +7,7 @@ import {
 } from '@phosphor-icons/react';
 import type { FormEvent } from 'react';
 import type { ClientGenerationMode } from '../services/generator';
+import type { ProviderPresentation } from '../services/providerStatus';
 import type { BriefInput } from '../types';
 import { ExampleTopics } from './ExampleTopics';
 
@@ -16,6 +17,7 @@ interface TopicFormProps {
   generationError: string;
   isLoading: boolean;
   generationMode?: ClientGenerationMode;
+  providerPresentation: ProviderPresentation;
   onChange: (nextValue: BriefInput) => void;
   onGenerationModeChange: (nextMode: ClientGenerationMode) => void;
   onSubmit: () => void;
@@ -29,6 +31,7 @@ export function TopicForm({
   generationError,
   isLoading,
   generationMode = 'mock',
+  providerPresentation,
   onChange,
   onGenerationModeChange,
   onSubmit,
@@ -78,11 +81,11 @@ export function TopicForm({
                 value="local-ai"
                 checked={generationMode === 'local-ai'}
                 onChange={() => onGenerationModeChange('local-ai')}
-                disabled={isLoading}
+                disabled={isLoading || providerPresentation.optionDisabled}
               />
               <span>
-                <strong>本地 AI 模式</strong>
-                <small>通过后端调用本机 Ollama / Qwen</small>
+                <strong>{providerPresentation.optionTitle}</strong>
+                <small>{providerPresentation.optionDescription}</small>
               </span>
             </label>
           </div>
@@ -198,7 +201,15 @@ export function TopicForm({
           ) : null}
 
           <div className="topic-form__footer">
-            <button className="generate-button" type="submit" disabled={isLoading}>
+            <button
+              className="generate-button"
+              type="submit"
+              disabled={
+                isLoading ||
+                (generationMode === 'local-ai' &&
+                  providerPresentation.optionDisabled)
+              }
+            >
               <span className="generate-button__icon" aria-hidden="true">
                 {isLoading ? (
                   <SpinnerGap className="spin" weight="bold" />
@@ -212,7 +223,7 @@ export function TopicForm({
             <p>
               <LockKey aria-hidden="true" weight="bold" />
               {generationMode === 'local-ai'
-                ? '本地 AI 模式会把输入发送到本机后端与 Ollama，请勿填写敏感个人信息。'
+                ? providerPresentation.privacyNotice
                 : '所有内容在本地模拟生成，不会上传或保存。'}
             </p>
           </div>

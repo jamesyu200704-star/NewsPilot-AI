@@ -5,18 +5,16 @@ import {
   type GenerationResult,
 } from '../../shared/generation.js';
 import {
+  createNewsBriefUserPrompt,
+  NEWS_BRIEF_SYSTEM_PROMPT,
+} from '../../prompts/newsBrief.js';
+import {
   assertGenerationContent,
   assertGenerationResult,
 } from '../validation.js';
 import type { GenerationProvider } from './GenerationProvider.js';
 
 const OPENAI_RESPONSES_ENDPOINT = 'https://api.openai.com/v1/responses';
-
-const SYSTEM_PROMPT = `你是 NewsPilot 的新闻选题与采访策划助手。
-只生成前期策划建议，不得声称已经完成采访、调查或事实核验，不得虚构真实人物、引语、机构结论或精确统计。
-请严格输出三个角度，并依次使用 id：people、system、trend。
-每个角度必须包含：3 条新闻价值、4 类采访对象、6 个采访问题、4 条事实核查清单、3 条风险提醒、3 条下一步行动。
-所有内容使用简体中文，具体、可执行，并明确待核验边界。`;
 
 export type FetchImplementation = (
   input: string | URL | Request,
@@ -104,10 +102,10 @@ export class OpenAIProvider implements GenerationProvider {
           model: this.model,
           store: false,
           input: [
-            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'system', content: NEWS_BRIEF_SYSTEM_PROMPT },
             {
               role: 'user',
-              content: '请根据以下用户输入生成新闻策划方案：\n' + JSON.stringify(input),
+              content: createNewsBriefUserPrompt(input),
             },
           ],
           text: {

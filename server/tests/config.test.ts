@@ -7,7 +7,7 @@ test('服务端默认使用 Mock，并提供安全的 Ollama 默认配置', () =
 
   assert.equal(config.provider, 'mock');
   assert.equal(config.ollamaBaseUrl, 'http://localhost:11434');
-  assert.equal(config.ollamaModel, 'qwen3:8b');
+  assert.equal(config.ollamaModel, 'qwen2.5:1.5b');
 });
 
 test('GENERATION_MODE=ollama 启用可配置的本地模型', () => {

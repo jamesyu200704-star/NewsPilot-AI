@@ -53,7 +53,7 @@ export const readServerConfig = (
     ollamaBaseUrl: withoutTrailingSlash(
       environment.OLLAMA_BASE_URL?.trim() || 'http://localhost:11434',
     ),
-    ollamaModel: environment.OLLAMA_MODEL?.trim() || 'qwen3:8b',
+    ollamaModel: environment.OLLAMA_MODEL?.trim() || 'qwen2.5:1.5b',
     ollamaTimeoutMs: toPositiveInteger(environment.OLLAMA_TIMEOUT_MS, 90_000),
   };
 };

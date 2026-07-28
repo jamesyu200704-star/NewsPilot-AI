@@ -1,5 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import {
+  createNewsBriefUserPrompt,
+  NEWS_BRIEF_SYSTEM_PROMPT,
+} from '../../prompts/newsBrief.js';
 import { generationContentJsonSchema } from '../../shared/generation.js';
 import { createMockGenerationResult } from '../../shared/mockGeneration.js';
 import {
@@ -47,6 +51,7 @@ test('OpenAIProvider 使用 Responses JSON Schema 并解析有效结果', async 
   const requestBody = JSON.parse(String(capturedInit?.body)) as {
     model: string;
     store: boolean;
+    input: Array<{ role: string; content: string }>;
     text: { format: { type: string; strict: boolean; schema: unknown } };
   };
 
@@ -55,6 +60,10 @@ test('OpenAIProvider 使用 Responses JSON Schema 并解析有效结果', async 
   assert.equal(headers.get('Authorization'), 'Bearer ' + serverCredential);
   assert.equal(requestBody.model, 'test-model');
   assert.equal(requestBody.store, false);
+  assert.deepEqual(requestBody.input, [
+    { role: 'system', content: NEWS_BRIEF_SYSTEM_PROMPT },
+    { role: 'user', content: createNewsBriefUserPrompt(sampleInput) },
+  ]);
   assert.equal(requestBody.text.format.type, 'json_schema');
   assert.equal(requestBody.text.format.strict, true);
   assert.deepEqual(requestBody.text.format.schema, generationContentJsonSchema);

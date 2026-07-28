@@ -44,17 +44,15 @@ export class GeneratorService {
 
       const fallbackResult = await this.fallbackProvider.generate(input);
       assertGenerationResult(fallbackResult);
-      const ollamaUserMessage =
+      const providerUserMessage =
         this.primaryProvider.name === 'ollama'
           ? getOllamaUserMessage(error)
-          : undefined;
-      const finalResult: GenerationResult = ollamaUserMessage
-        ? {
-            ...fallbackResult,
-            fallbackNotice:
-              ollamaUserMessage + '已自动切换到 Demo 模式。',
-          }
-        : fallbackResult;
+          : 'OpenAI 生成暂时不可用，';
+      const finalResult: GenerationResult = {
+        ...fallbackResult,
+        fallbackNotice:
+          providerUserMessage + '已自动切换到 Demo 模式。',
+      };
       assertGenerationResult(finalResult);
       return finalResult;
     }

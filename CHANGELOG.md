@@ -6,23 +6,7 @@
 
 ## [Unreleased]
 
-### Added
-
-- OllamaProvider 与可配置的 Qwen 本地推理支持。
-- Demo / 本地 AI 页面模式选择、Ollama 错误提示与 Mock 自动降级。
-- Ollama JSON Schema 请求、JSON 解析重试、配置和前端分流测试。
-
-### Changed
-
-- Generator Service 改为 Express，并按路由、服务和 Provider 分层。
-- <code>npm run dev</code> 现在同时启动后端 API 与 Vite 前端。
-
-### Security
-
-- 忽略本地模型目录、Ollama 数据目录和环境文件。
-- 本地模型输出继续经过共享 JSON Schema 与服务端 Ajv 校验。
-
-## [0.1.0] - 2026-07-22
+## [0.1.0] - 2026-07-29
 
 ### Added
 
@@ -31,12 +15,21 @@
 - “人物、制度、数据趋势”三个固定报道角度及统一的结构化结果。
 - 浏览器本地 Mock 模式，默认无需后端或 API Key。
 - Node.js Generator Service、GenerationProvider 接口、MockProvider 与可选 OpenAIProvider。
+- OllamaProvider、可配置的 Qwen 本地推理和已验证的轻量默认模型。
 - OpenAI Responses API Structured Outputs、JSON Schema、Ajv 服务端校验和客户端运行时校验。
 - OpenAI 到服务端 Mock、API 到浏览器本地 Mock 的双层降级链路。
+- Demo / AI 页面模式选择、Provider 健康检查、准确的数据去向提示与不可用状态禁用。
+- Ollama JSON Schema 请求、JSON 解析重试和可操作的自动降级提示。
 - 单角度复制、完整方案复制和 UTF-8 Markdown 导出。
 - 响应式布局、键盘焦点样式和 <code>prefers-reduced-motion</code> 支持。
 - Schema、Provider、降级、客户端适配器和 HTTP API 测试。
 - 开源 README、贡献指南、安全策略和变更记录。
+
+### Changed
+
+- Generator Service 改为 Express，并按路由、服务和 Provider 分层。
+- <code>npm run dev</code> 同时启动后端 API 与 Vite 前端。
+- OpenAI 与 Ollama 共用同一套系统提示词、输入数据边界和防提示词注入说明。
 
 ### Security
 
@@ -47,3 +40,5 @@
 - Markdown 导出将用户及模型文本转义为不可执行的纯文本语法。
 - 默认服务只监听 <code>127.0.0.1</code>；公网部署边界在文档中明确说明。
 - GitHub Actions 使用最小权限执行 <code>npm ci</code>、测试和生产构建。
+- 忽略本地模型目录、Ollama 数据目录和所有真实环境文件。
+- Vercel 静态部署使用 <code>npm ci</code> 并设置 CSP、防嵌入、MIME 嗅探保护、Referrer Policy 与 Permissions Policy。

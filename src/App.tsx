@@ -9,7 +9,16 @@ import {
   generateBrief,
   type ClientGenerationMode,
 } from './services/generator';
+import {
+  checkingProviderStatus,
+  detectGenerationProvider,
+  getProviderPresentation,
+  resolveGenerationMode,
+} from './services/providerStatus';
 import type { BriefInput, GenerationResult } from './types';
+
+const PROVIDER_HEALTH_ENDPOINT = '/api/health';
+const PROVIDER_HEALTH_TIMEOUT_MS = 3_000;
 
 const initialBrief: BriefInput = {
   topic: '',
@@ -28,7 +37,33 @@ export default function App() {
   const [generationError, setGenerationError] = useState('');
   const [generationMode, setGenerationMode] =
     useState<ClientGenerationMode>(clientGenerationMode);
+  const [providerStatus, setProviderStatus] = useState(checkingProviderStatus);
   const resultRegionRef = useRef<HTMLDivElement>(null);
+  const providerPresentation = getProviderPresentation(providerStatus);
+  const aiGenerationUnavailable =
+    generationMode === 'local-ai' && providerStatus.state !== 'ready';
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    void detectGenerationProvider({
+      endpoint: PROVIDER_HEALTH_ENDPOINT,
+      timeoutMs: PROVIDER_HEALTH_TIMEOUT_MS,
+    }).then((nextStatus) => {
+      if (!isCurrent) {
+        return;
+      }
+
+      setProviderStatus(nextStatus);
+      setGenerationMode((currentMode) =>
+        resolveGenerationMode(currentMode, nextStatus),
+      );
+    });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!result || !resultRegionRef.current) {
@@ -65,6 +100,12 @@ export default function App() {
       return;
     }
 
+    if (aiGenerationUnavailable) {
+      setGenerationMode('mock');
+      setGenerationError('AI 生成服务尚未就绪，已切换到 Demo 模式。');
+      return;
+    }
+
     setError('');
     setGenerationError('');
     setIsLoading(true);
@@ -93,13 +134,20 @@ export default function App() {
   };
 
   const handleGenerationModeChange = (nextMode: ClientGenerationMode) => {
+    if (nextMode === 'local-ai' && providerPresentation.optionDisabled) {
+      return;
+    }
+
     setGenerationMode(nextMode);
     setGenerationError('');
   };
 
   return (
     <div className="app-shell">
-      <Header generationMode={generationMode} />
+      <Header
+        generationMode={generationMode}
+        providerPresentation={providerPresentation}
+      />
       <main className="workspace">
         <div className="input-workspace">
           <TopicForm
@@ -108,6 +156,7 @@ export default function App() {
             generationError={generationError}
             isLoading={isLoading}
             generationMode={generationMode}
+            providerPresentation={providerPresentation}
             onChange={handleBriefChange}
             onGenerationModeChange={handleGenerationModeChange}
             onSubmit={handleGenerate}
@@ -124,6 +173,7 @@ export default function App() {
               onSelect={handleExampleSelect}
               disabled={isLoading}
               generationMode={generationMode}
+              providerPresentation={providerPresentation}
             />
           )}
         </div>
@@ -133,7 +183,7 @@ export default function App() {
         <span>NewsPilot AI</span>
         <p>
           {generationMode === 'local-ai'
-            ? '输入由本机 Ollama 处理，生成内容需独立核验'
+            ? providerPresentation.footerNotice
             : '本地模拟，不上传数据，生成内容需独立核验'}
         </p>
       </footer>

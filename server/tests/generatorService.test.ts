@@ -58,6 +58,10 @@ test('OpenAI 请求失败时自动降级到 MockProvider', async () => {
   const result = await service.generate(sampleInput);
   assert.equal(result.mode, 'mock');
   assert.equal(result.angles.length, 3);
+  assert.equal(
+    result.fallbackNotice,
+    'OpenAI 生成暂时不可用，已自动切换到 Demo 模式。',
+  );
 });
 
 test('OpenAI HTTP 请求返回非成功状态时自动降级到 MockProvider', async () => {

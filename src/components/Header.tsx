@@ -1,11 +1,16 @@
 import { NewspaperClipping } from '@phosphor-icons/react';
 import type { ClientGenerationMode } from '../services/generator';
+import type { ProviderPresentation } from '../services/providerStatus';
 
 interface HeaderProps {
   generationMode?: ClientGenerationMode;
+  providerPresentation: ProviderPresentation;
 }
 
-export function Header({ generationMode = 'mock' }: HeaderProps) {
+export function Header({
+  generationMode = 'mock',
+  providerPresentation,
+}: HeaderProps) {
   return (
     <header className="app-header">
       <div className="brand" aria-label="NewsPilot AI">
@@ -23,7 +28,9 @@ export function Header({ generationMode = 'mock' }: HeaderProps) {
       <div className="app-header__meta" aria-label="应用状态">
         <span className="app-header__label">选题研究工具</span>
         <span className="mode-badge">
-          {generationMode === 'local-ai' ? '本地 AI' : 'Demo 模式'}
+          {generationMode === 'local-ai'
+            ? providerPresentation.activeLabel
+            : 'Demo 模式'}
         </span>
       </div>
     </header>

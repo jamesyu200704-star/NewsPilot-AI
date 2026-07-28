@@ -1,10 +1,12 @@
 import { ArrowUpRight, NewspaperClipping } from '@phosphor-icons/react';
 import type { ClientGenerationMode } from '../services/generator';
+import type { ProviderPresentation } from '../services/providerStatus';
 
 interface EmptyStateProps {
   onSelect: (topic: string) => void;
   disabled?: boolean;
   generationMode?: ClientGenerationMode;
+  providerPresentation: ProviderPresentation;
 }
 
 const cases = [
@@ -26,12 +28,17 @@ export function EmptyState({
   onSelect,
   disabled = false,
   generationMode = 'mock',
+  providerPresentation,
 }: EmptyStateProps) {
   return (
     <section className="empty-state" aria-labelledby="empty-state-title">
       <div className="empty-state__topline">
         <span>从线索到采访</span>
-        <span>{generationMode === 'local-ai' ? '本地 AI' : 'Demo 模式'}</span>
+        <span>
+          {generationMode === 'local-ai'
+            ? providerPresentation.activeLabel
+            : 'Demo 模式'}
+        </span>
       </div>
 
       <div className="empty-state__statement">

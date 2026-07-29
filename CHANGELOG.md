@@ -8,7 +8,7 @@
 
 ### Added
 
-- 结构化 Bug 与改进建议表单、Pull Request 检查清单和每周 Dependabot 更新。
+- 结构化 Bug 与改进建议表单、Pull Request 检查清单和每周非破坏性 Dependabot 更新。
 - 独立的健康检查契约测试，覆盖 Provider 状态与禁止缓存响应头。
 - 编辑器基础格式约定。
 

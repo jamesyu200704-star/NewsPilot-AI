@@ -332,7 +332,7 @@ NewsPilot AI/
 ├── .github/
 │   ├── ISSUE_TEMPLATE/           # Bug、建议与安全报告入口
 │   ├── workflows/build.yml       # 测试、审计与生产构建
-│   ├── dependabot.yml            # 每周依赖更新
+│   ├── dependabot.yml            # 每周非破坏性依赖更新
 │   └── PULL_REQUEST_TEMPLATE.md
 ├── docs/                         # 截图与作品集文档
 ├── prompts/
@@ -411,7 +411,7 @@ NewsPilot AI/
 - 贡献流程见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 - 安全问题报告方式见 [SECURITY.md](SECURITY.md)。
 - 版本记录见 [CHANGELOG.md](CHANGELOG.md)。
-- GitHub 已提供结构化 Issue 表单、Pull Request 检查清单和每周 Dependabot 更新。
+- GitHub 已提供结构化 Issue 表单、Pull Request 检查清单和每周 Dependabot 小版本/补丁更新；主版本升级需单独评估。
 
 ## 官方参考
 

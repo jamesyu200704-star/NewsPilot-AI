@@ -38,7 +38,7 @@ npm run dev
 
 <code>npm run dev</code> 会同时启动 Express Generator Service 与 Vite 前端。仅调试其中一侧时，可分别使用 <code>npm run dev:server</code> 或 <code>npm run dev:web</code>。
 
-使用本地 AI 模式前，先安装并启动 Ollama，再按 README 设置 <code>GENERATION_MODE=ollama</code>、<code>OLLAMA_BASE_URL</code> 与 <code>OLLAMA_MODEL</code>。不要提交本机模型、Ollama 数据目录或环境文件。
+使用 Ollama AI 前，先安装并启动 Ollama，再按 README 设置 <code>GENERATION_MODE=ollama</code>、<code>OLLAMA_BASE_URL</code> 与 <code>OLLAMA_MODEL</code>。默认地址只监听本机；若改为远程地址，请确认连接和服务可信。不要提交本机模型、Ollama 数据目录或环境文件。
 
 ## 提交 Issue
 

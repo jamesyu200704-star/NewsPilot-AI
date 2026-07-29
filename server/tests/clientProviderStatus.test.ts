@@ -84,6 +84,22 @@ test('静态部署或非法健康响应安全回落为不可用', async () => {
 });
 
 test('Provider 展示文案准确说明数据去向与可用状态', () => {
+  const checking = getProviderPresentation({
+    state: 'checking',
+    provider: null,
+  });
+  assert.match(checking.optionDescription, /识别项目后端配置/u);
+
+  const ollama = getProviderPresentation({
+    state: 'ready',
+    provider: 'ollama',
+  });
+  assert.equal(ollama.optionTitle, 'Ollama AI');
+  assert.match(ollama.optionDescription, /已配置的 Ollama/u);
+  assert.match(ollama.privacyNotice, /请确认该地址可信/u);
+  assert.doesNotMatch(ollama.privacyNotice, /不会提交给第三方/u);
+  assert.equal(ollama.optionDisabled, false);
+
   const openAI = getProviderPresentation({
     state: 'ready',
     provider: 'openai',

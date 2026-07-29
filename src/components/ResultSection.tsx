@@ -19,6 +19,8 @@ interface ResultSectionProps {
   result: GenerationResult;
 }
 
+const FEEDBACK_DURATION_MS = 3_000;
+
 const formatTime = (value: string) =>
   new Intl.DateTimeFormat('zh-CN', {
     month: '2-digit',
@@ -46,7 +48,7 @@ export function ResultSection({ input, result }: ResultSectionProps) {
     feedbackTimer.current = window.setTimeout(() => {
       setFeedback('');
       setCopiedId(null);
-    }, 1800);
+    }, FEEDBACK_DURATION_MS);
   };
 
   const handleCopy = async (text: string, id: string) => {

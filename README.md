@@ -1,5 +1,10 @@
 # NewsPilot AI
 
+[![Build](https://github.com/jamesyu200704-star/NewsPilot-AI/actions/workflows/build.yml/badge.svg)](https://github.com/jamesyu200704-star/NewsPilot-AI/actions/workflows/build.yml)
+[![Release](https://img.shields.io/github/v/release/jamesyu200704-star/NewsPilot-AI)](https://github.com/jamesyu200704-star/NewsPilot-AI/releases/latest)
+[![License](https://img.shields.io/github/license/jamesyu200704-star/NewsPilot-AI)](LICENSE)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Vercel-000000?logo=vercel)](https://newspilot-ai-ashy.vercel.app)
+
 NewsPilot AI 是一个面向新闻学生、校园媒体和初级记者的新闻选题与采访策划助手。它把模糊主题整理为可执行的报道角度，并补齐采访对象、采访问题、事实核查任务与风险提醒。
 
 AI-assisted news topic planning and interview preparation tool for journalism students.
@@ -37,9 +42,9 @@ NewsPilot AI 将准备过程组织为：
 - 每个角度包含新闻价值、采访对象、采访问题、事实核查清单、风险提醒和下一步行动。
 - 支持复制单个角度、复制完整方案和导出 UTF-8 Markdown 文件。
 - 默认使用浏览器本地 Mock，不上传输入，也不需要 API Key。
-- 页面会通过健康检查识别 Ollama、OpenAI 或未连接状态；只有真实 AI 后端就绪时才允许选择对应 AI 模式。
+- 页面会通过健康检查识别项目后端配置的 Ollama、OpenAI 或 Mock；只有后端报告已配置 AI Provider 时才允许选择对应模式。
 - Express Generator Service 通过 Provider 层支持 Mock、Ollama 与原有 OpenAI Provider。
-- Ollama 使用本机 Qwen 与 JSON Schema Structured Outputs，不需要付费 API 或上传模型权重。
+- Ollama 默认连接本机 Qwen，并使用 JSON Schema Structured Outputs；也可显式配置其他可信 Ollama 地址。
 - Ollama/OpenAI 失败时服务端降级到 MockProvider；API 不可用时前端继续降级到浏览器本地 Mock。
 - 通过结果中的 <code>mode</code> 明确区分 <code>mock</code>、<code>ollama</code> 与 <code>openai</code>，避免混淆内容来源。
 
@@ -75,7 +80,7 @@ flowchart LR
     P --> O["Ollama Provider"]
     P --> A["OpenAI Provider"]
     M --> R["Structured Result"]
-    O --> Q["Local Qwen"]
+    O --> Q["Configured Ollama / Qwen"]
     Q --> V["JSON Schema + Ajv Validation"]
     A --> V["JSON Schema + Ajv Validation"]
     V --> R
@@ -87,7 +92,7 @@ flowchart LR
 实际运行包含三种路径：
 
 - **本地 Mock**：<code>src/services/generator.ts</code> 直接调用共享 Mock 生成器，完全在浏览器运行。
-- **Ollama 本地 AI**：React 前端调用 <code>POST /api/generate</code>，Express API 经 <code>GeneratorService</code> 调用 OllamaProvider 与本机 Qwen。
+- **Ollama AI（默认本机）**：React 前端调用 <code>POST /api/generate</code>，Express API 经 <code>GeneratorService</code> 调用配置的 Ollama / Qwen；默认地址为本机回环地址。
 - **OpenAI**：服务端可选择 OpenAIProvider；页面会明确显示云端 Provider 和数据去向，不会误标为本地处理。
 
 共享的 <code>BriefInput</code>、<code>GenerationResult</code> 和 JSON Schema 位于 <code>shared/generation.ts</code>。服务端只向 Provider 传递通过输入 Schema 校验的数据，并在返回 API 响应前再次校验完整结果。
@@ -106,8 +111,8 @@ flowchart LR
 ### V0.1 Open Source Release
 
 - 默认模式：浏览器本地 Mock。
-- 可选模式：Express Generator Service + Ollama/Qwen 本地推理或 OpenAI Provider。
-- Provider 状态：页面通过 <code>GET /api/health</code> 自动识别；不可用时禁用 AI 选项并安全回到 Demo。
+- 可选模式：Express Generator Service + Ollama/Qwen（默认本机）或 OpenAI Provider。
+- Provider 状态：页面通过 <code>GET /api/health</code> 识别项目后端配置；未连接或仅配置 Mock 时禁用 AI 选项并安全回到 Demo，上游调用失败时仍会自动降级。
 - 当前包版本：<code>0.1.0</code>。
 - 当前不包含账号、权限、数据库、历史记录或生产级 API 网关。
 
@@ -153,9 +158,9 @@ npm run build
 
 该命令构建前端 <code>dist/</code> 与服务端 <code>dist-server/</code>。可用 <code>npm run preview</code> 预览前端构建结果。
 
-## Local AI Mode
+## Ollama AI Mode（默认本机）
 
-本地 AI 模式不需要付费 API；新闻主题只会发送到本机 Express 服务和本机 Ollama。
+默认配置不需要付费 API：新闻主题会发送到本机 Express 服务和 <code>http://localhost:11434</code> 的 Ollama。若修改 <code>OLLAMA_BASE_URL</code>，输入会发送到你配置的地址；请确认该服务可信、连接受到保护，并相应调整隐私判断。
 
 ### 1. 安装 Ollama
 
@@ -190,7 +195,7 @@ npm install
 npm run dev
 ~~~
 
-打开页面后选择“Ollama 本地 AI”并生成。若 Ollama 未启动、模型不存在、返回 JSON 非法或请求失败，应用会给出可操作提示并自动降级到 Demo；JSON 解析失败会先自动重试一次。
+打开页面后选择“Ollama AI”并生成。若 Ollama 未启动、模型不存在、返回 JSON 非法或请求失败，应用会给出可操作提示并自动降级到 Demo；JSON 解析失败会先自动重试一次。
 
 ### 支持哪些模型
 
@@ -218,7 +223,7 @@ npm run dev
 
 ~~~dotenv
 GENERATION_MODE=openai
-OPENAI_API_KEY=your_server_side_key
+OPENAI_API_KEY=
 OPENAI_MODEL=gpt-5.6-terra
 ~~~
 
@@ -276,7 +281,7 @@ OllamaProvider 调用 <code>POST /api/chat</code>，设置 <code>stream=false</c
 
 ### <code>GET /api/health</code>
 
-返回当前主 Provider 与降级 Provider 名称，不返回密钥。
+返回当前配置的主 Provider 与降级 Provider 名称，不探测上游模型，也不返回密钥。
 
 ## 构建与测试
 
@@ -324,6 +329,11 @@ VITE_GENERATION_MODE=mock
 
 ~~~text
 NewsPilot AI/
+├── .github/
+│   ├── ISSUE_TEMPLATE/           # Bug、建议与安全报告入口
+│   ├── workflows/build.yml       # 测试、审计与生产构建
+│   ├── dependabot.yml            # 每周依赖更新
+│   └── PULL_REQUEST_TEMPLATE.md
 ├── docs/                         # 截图与作品集文档
 ├── prompts/
 │   └── newsBrief.ts              # 新闻策划系统提示词与输入封装
@@ -344,6 +354,7 @@ NewsPilot AI/
 │   ├── App.tsx
 │   ├── main.tsx
 │   └── styles.css
+├── .editorconfig                 # 编辑器基础格式约定
 ├── .env.example
 ├── CONTRIBUTING.md
 ├── CHANGELOG.md
@@ -371,7 +382,7 @@ NewsPilot AI/
 ## 内容与隐私边界
 
 - 生成结果不是已完成的采访、调查或事实结论。
-- 本地 Mock 不发送用户输入；本地 AI 模式只发送到本机 Generator Service 与 Ollama；OpenAI 模式会发送给 OpenAI API。
+- 本地 Mock 不发送用户输入；Ollama AI 会把输入发送到项目后端和 <code>OLLAMA_BASE_URL</code> 指向的服务（默认均在本机）；OpenAI 模式会发送给 OpenAI API。
 - 应用不持久化输入，OpenAI 请求设置 <code>store=false</code>；仍不要填写无关的电话、身份证号、学号或其他敏感个人信息。
 - 项目目前不提供账号、权限、数据库、多租户隔离或正式发布流程。
 
@@ -400,6 +411,7 @@ NewsPilot AI/
 - 贡献流程见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 - 安全问题报告方式见 [SECURITY.md](SECURITY.md)。
 - 版本记录见 [CHANGELOG.md](CHANGELOG.md)。
+- GitHub 已提供结构化 Issue 表单、Pull Request 检查清单和每周 Dependabot 更新。
 
 ## 官方参考
 

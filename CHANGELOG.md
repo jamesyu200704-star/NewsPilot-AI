@@ -6,6 +6,22 @@
 
 ## [Unreleased]
 
+### Added
+
+- 结构化 Bug 与改进建议表单、Pull Request 检查清单和每周 Dependabot 更新。
+- 独立的健康检查契约测试，覆盖 Provider 状态与禁止缓存响应头。
+- 编辑器基础格式约定。
+
+### Changed
+
+- Ollama 页面文案与文档改为描述实际配置地址，不再把自定义 <code>OLLAMA_BASE_URL</code> 误称为必然本机处理。
+- 复制与 Markdown 导出的操作反馈延长到 3 秒，减少提示来不及阅读的情况。
+- GitHub Actions 仅在 <code>main</code>、面向 <code>main</code> 的 Pull Request 或手动触发时运行，并增加超时与高危依赖审计。
+
+### Security
+
+- GitHub Actions 固定到官方发布提交，并关闭 checkout 凭据持久化。
+
 ## [0.1.0] - 2026-07-29
 
 ### Added

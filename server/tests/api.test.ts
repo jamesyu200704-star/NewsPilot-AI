@@ -55,6 +55,27 @@ class BlockingProvider implements GenerationProvider {
   }
 }
 
+test('GET /api/health 返回 Provider 状态并禁止缓存', async () => {
+  const mockProvider = new MockProvider();
+  const server = createApiServer(new GeneratorService(mockProvider, mockProvider));
+  const baseUrl = await listen(server);
+
+  try {
+    const response = await fetch(baseUrl + '/api/health');
+
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('Cache-Control'), 'no-store');
+    assert.equal(response.headers.get('X-Content-Type-Options'), 'nosniff');
+    assert.deepEqual(await response.json(), {
+      ok: true,
+      provider: 'mock',
+      fallbackProvider: 'mock',
+    });
+  } finally {
+    await close(server);
+  }
+});
+
 test('POST /api/generate 返回经过服务层的 GenerationResult', async () => {
   const mockProvider = new MockProvider();
   const server = createApiServer(new GeneratorService(mockProvider, mockProvider));
@@ -82,11 +103,6 @@ test('POST /api/generate 返回经过服务层的 GenerationResult', async () =>
       body: JSON.stringify({ topic: '' }),
     });
     assert.equal(invalidResponse.status, 400);
-
-    const healthResponse = await fetch(baseUrl + '/api/health');
-    const health = (await healthResponse.json()) as { provider: string };
-    assert.equal(healthResponse.status, 200);
-    assert.equal(health.provider, 'mock');
   } finally {
     await close(server);
   }

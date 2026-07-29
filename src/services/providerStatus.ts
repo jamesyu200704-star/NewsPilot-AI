@@ -65,7 +65,7 @@ export const getProviderPresentation = (
   if (status.state === 'checking') {
     return {
       optionTitle: '正在检测生成服务',
-      optionDescription: '确认本地或云端 AI 后端是否可用',
+      optionDescription: '识别项目后端配置的 AI Provider',
       activeLabel: '正在检测',
       privacyNotice: '正在检测生成服务，完成前不会发送主题内容。',
       footerNotice: '正在检测生成服务，生成内容需独立核验',
@@ -75,12 +75,12 @@ export const getProviderPresentation = (
 
   if (status.state === 'ready' && status.provider === 'ollama') {
     return {
-      optionTitle: 'Ollama 本地 AI',
-      optionDescription: '通过本机后端调用本机 Qwen',
-      activeLabel: 'Ollama 本地 AI',
+      optionTitle: 'Ollama AI',
+      optionDescription: '通过项目后端调用已配置的 Ollama / Qwen',
+      activeLabel: 'Ollama AI',
       privacyNotice:
-        '输入会发送到本机后端与 Ollama，不会提交给第三方模型服务；请勿填写敏感个人信息。',
-      footerNotice: '输入由本机 Ollama 处理，生成内容需独立核验',
+        '输入会发送到项目后端与已配置的 Ollama 服务；请确认该地址可信，并勿填写敏感个人信息。',
+      footerNotice: '输入由已配置的 Ollama 服务处理，生成内容需独立核验',
       optionDisabled: false,
     };
   }

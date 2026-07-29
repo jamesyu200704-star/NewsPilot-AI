@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 私密安全漏洞报告
+    url: https://github.com/jamesyu200704-star/NewsPilot-AI/security/advisories/new
+    about: 发现可能被利用的安全问题时，请不要公开提交 Issue。

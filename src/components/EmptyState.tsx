@@ -33,7 +33,7 @@ export function EmptyState({
   return (
     <section className="empty-state" aria-labelledby="empty-state-title">
       <div className="empty-state__topline">
-        <span>从线索到采访</span>
+        <span>从线索到新闻工作流</span>
         <span>
           {generationMode === 'local-ai'
             ? providerPresentation.activeLabel
@@ -46,9 +46,9 @@ export function EmptyState({
           <NewspaperClipping weight="bold" />
         </div>
         <h2 id="empty-state-title">
-          一个主题，三条可采访的报道路径。
+          一条线索，一套可解释的新闻策划流程。
         </h2>
-        <p>人物、机制、趋势三个方向同时展开，让下一次采访从具体问题开始。</p>
+        <p>先评估新闻价值并检索证据，再由策划、核查、编辑三个 Agent 形成可执行采访路径。</p>
       </div>
 
       <div className="empty-state__examples">

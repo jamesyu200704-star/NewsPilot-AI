@@ -70,6 +70,7 @@ test('GET /api/health 返回 Provider 状态并禁止缓存', async () => {
       ok: true,
       provider: 'mock',
       fallbackProvider: 'mock',
+      searchProvider: 'mock',
     });
   } finally {
     await close(server);

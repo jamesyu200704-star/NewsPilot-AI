@@ -4,6 +4,7 @@ import {
   detectGenerationProvider,
   getProviderPresentation,
   resolveGenerationMode,
+  shouldDetectGenerationProvider,
   type ClientFetchImplementation,
 } from '../../src/services/providerStatus.js';
 
@@ -45,6 +46,30 @@ test('健康检查返回 OpenAI 时准确标记云端 Provider', async () => {
   });
 });
 
+test('健康检查返回 QwenProvider 时启用本地 Qwen Agent', async () => {
+  const status = await detectGenerationProvider({
+    endpoint: '/api/health',
+    timeoutMs: 100,
+    fetchImplementation: async () =>
+      Response.json({
+        ok: true,
+        provider: 'qwen',
+        fallbackProvider: 'mock',
+        searchProvider: 'brave',
+      }),
+  });
+
+  assert.deepEqual(status, {
+    state: 'ready',
+    provider: 'qwen',
+    searchProvider: 'brave',
+  });
+  const presentation = getProviderPresentation(status);
+  assert.equal(presentation.optionTitle, 'Qwen Agent');
+  assert.match(presentation.optionDescription, /三个 Agent/u);
+  assert.match(presentation.privacyNotice, /Brave Search API/u);
+});
+
 test('后端只配置 Mock 时不启用 AI 模式', async () => {
   const status = await detectGenerationProvider({
     endpoint: '/api/health',
@@ -81,6 +106,12 @@ test('静态部署或非法健康响应安全回落为不可用', async () => {
       provider: null,
     });
   }
+});
+
+test('生产环境的静态 Demo 不请求不存在的 Provider 健康接口', () => {
+  assert.equal(shouldDetectGenerationProvider('mock', true), false);
+  assert.equal(shouldDetectGenerationProvider('local-ai', true), true);
+  assert.equal(shouldDetectGenerationProvider('mock', false), true);
 });
 
 test('Provider 展示文案准确说明数据去向与可用状态', () => {

@@ -2,10 +2,18 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { generationContentJsonSchema } from '../../shared/generation.js';
 import { createMockGenerationResult } from '../../shared/mockGeneration.js';
+import {
+  createMockEditorialRevision,
+  createMockVerificationReview,
+} from '../../shared/mockAgents.js';
+import { createMockGenerationContent } from '../../shared/mockGeneration.js';
 import { assertRuntimeGenerationResult } from '../../shared/runtimeGenerationValidation.js';
+import { buildPlanningContext } from '../../shared/新闻方法论.js';
 import {
   assertBriefInput,
+  assertEditorialResolvesVerification,
   assertGenerationResult,
+  assertVerificationEvidence,
   SchemaValidationError,
 } from '../validation.js';
 import { sampleInput } from './fixtures.js';
@@ -40,6 +48,36 @@ test('Ollama 使用的 JSON Schema 正则全部带有首尾锚点', () => {
       (pattern) => !pattern.startsWith('^') || !pattern.endsWith('$'),
     ),
     [],
+  );
+});
+
+test('事实核查只能引用检索上下文中存在的证据 ID', () => {
+  const context = buildPlanningContext(sampleInput);
+  const draft = createMockGenerationContent(context);
+  const verification = createMockVerificationReview(context, draft);
+  verification.factCheck.findings[0]!.evidenceIds = ['invented-evidence-id'];
+
+  assert.throws(
+    () => assertVerificationEvidence(verification, context.retrievalContext),
+    (error) => error instanceof SchemaValidationError,
+  );
+});
+
+test('新闻编辑终审不能遗漏高风险核验任务', () => {
+  const context = buildPlanningContext(sampleInput);
+  const draft = createMockGenerationContent(context);
+  const verification = createMockVerificationReview(context, draft);
+  const editorial = createMockEditorialRevision(context, draft, verification);
+  editorial.decision.finalChecklist = [
+    '一般检查一',
+    '一般检查二',
+    '一般检查三',
+    '一般检查四',
+  ];
+
+  assert.throws(
+    () => assertEditorialResolvesVerification(editorial, verification),
+    (error) => error instanceof SchemaValidationError,
   );
 });
 

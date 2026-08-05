@@ -14,11 +14,17 @@ import {
   detectGenerationProvider,
   getProviderPresentation,
   resolveGenerationMode,
+  shouldDetectGenerationProvider,
+  unavailableProviderStatus,
 } from './services/providerStatus';
 import type { BriefInput, GenerationResult } from './types';
 
 const PROVIDER_HEALTH_ENDPOINT = '/api/health';
 const PROVIDER_HEALTH_TIMEOUT_MS = 3_000;
+const shouldDetectProvider = shouldDetectGenerationProvider(
+  clientGenerationMode,
+  import.meta.env.PROD,
+);
 
 const initialBrief: BriefInput = {
   topic: '',
@@ -37,13 +43,19 @@ export default function App() {
   const [generationError, setGenerationError] = useState('');
   const [generationMode, setGenerationMode] =
     useState<ClientGenerationMode>(clientGenerationMode);
-  const [providerStatus, setProviderStatus] = useState(checkingProviderStatus);
+  const [providerStatus, setProviderStatus] = useState(
+    shouldDetectProvider ? checkingProviderStatus : unavailableProviderStatus,
+  );
   const resultRegionRef = useRef<HTMLDivElement>(null);
   const providerPresentation = getProviderPresentation(providerStatus);
   const aiGenerationUnavailable =
     generationMode === 'local-ai' && providerStatus.state !== 'ready';
 
   useEffect(() => {
+    if (!shouldDetectProvider) {
+      return;
+    }
+
     let isCurrent = true;
 
     void detectGenerationProvider({

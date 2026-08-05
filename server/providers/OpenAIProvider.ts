@@ -1,16 +1,19 @@
 import {
+  editorialRevisionJsonSchema,
   generationContentJsonSchema,
-  type BriefInput,
+  verificationReviewJsonSchema,
+  type EditorialRevision,
   type GenerationContent,
-  type GenerationResult,
+  type PlanningContext,
+  type VerificationReview,
 } from '../../shared/generation.js';
+import { buildFactCheckPrompt } from '../../prompts/事实核查提示词.js';
+import { buildNewsEditorPrompt } from '../../prompts/新闻编辑提示词.js';
+import { buildFinalEditorPrompt } from '../../prompts/新闻编辑终审提示词.js';
 import {
-  createNewsBriefUserPrompt,
-  NEWS_BRIEF_SYSTEM_PROMPT,
-} from '../../prompts/newsBrief.js';
-import {
+  assertEditorialRevision,
   assertGenerationContent,
-  assertGenerationResult,
+  assertVerificationReview,
 } from '../validation.js';
 import type { GenerationProvider } from './GenerationProvider.js';
 
@@ -83,7 +86,12 @@ export class OpenAIProvider implements GenerationProvider {
     this.fetchImplementation = options.fetchImplementation ?? globalThis.fetch;
   }
 
-  async generate(input: BriefInput): Promise<GenerationResult> {
+  private async requestStructured<T>(
+    prompt: { system: string; user: string },
+    schemaName: string,
+    schema: unknown,
+    assertValue: (value: unknown) => asserts value is T,
+  ): Promise<T> {
     if (!this.apiKey) {
       throw new Error('服务端未配置 OPENAI_API_KEY。');
     }
@@ -102,17 +110,17 @@ export class OpenAIProvider implements GenerationProvider {
           model: this.model,
           store: false,
           input: [
-            { role: 'system', content: NEWS_BRIEF_SYSTEM_PROMPT },
+            { role: 'system', content: prompt.system },
             {
               role: 'user',
-              content: createNewsBriefUserPrompt(input),
+              content: prompt.user,
             },
           ],
           text: {
             format: {
               type: 'json_schema',
-              name: 'news_generation_result',
-              schema: generationContentJsonSchema,
+              name: schemaName,
+              schema,
               strict: true,
             },
           },
@@ -141,18 +149,44 @@ export class OpenAIProvider implements GenerationProvider {
         throw new Error('OpenAI 返回内容不是有效 JSON。');
       }
 
-      assertGenerationContent(content);
-
-      const result: GenerationResult = {
-        ...(content as GenerationContent),
-        generatedAt: new Date().toISOString(),
-        mode: 'openai',
-      };
-
-      assertGenerationResult(result);
-      return result;
+      assertValue(content);
+      return content;
     } finally {
       globalThis.clearTimeout(timeout);
     }
+  }
+
+  generate(context: PlanningContext): Promise<GenerationContent> {
+    return this.requestStructured(
+      buildNewsEditorPrompt(context),
+      'news_generation_content',
+      generationContentJsonSchema,
+      assertGenerationContent,
+    );
+  }
+
+  verify(
+    context: PlanningContext,
+    draft: GenerationContent,
+  ): Promise<VerificationReview> {
+    return this.requestStructured(
+      buildFactCheckPrompt(context, draft),
+      'news_fact_check_review',
+      verificationReviewJsonSchema,
+      assertVerificationReview,
+    );
+  }
+
+  edit(
+    context: PlanningContext,
+    draft: GenerationContent,
+    verification: VerificationReview,
+  ): Promise<EditorialRevision> {
+    return this.requestStructured(
+      buildFinalEditorPrompt(context, draft, verification),
+      'news_editorial_revision',
+      editorialRevisionJsonSchema,
+      assertEditorialRevision,
+    );
   }
 }

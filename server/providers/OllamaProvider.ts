@@ -1,21 +1,24 @@
 import {
+  editorialRevisionJsonSchema,
   generationContentJsonSchema,
-  type BriefInput,
+  verificationReviewJsonSchema,
+  type EditorialRevision,
   type GenerationContent,
-  type GenerationResult,
+  type PlanningContext,
+  type VerificationReview,
 } from '../../shared/generation.js';
-import {
-  createNewsBriefUserPrompt,
-  NEWS_BRIEF_SYSTEM_PROMPT,
-} from '../../prompts/newsBrief.js';
+import { buildFactCheckPrompt } from '../../prompts/事实核查提示词.js';
+import { buildNewsEditorPrompt } from '../../prompts/新闻编辑提示词.js';
+import { buildFinalEditorPrompt } from '../../prompts/新闻编辑终审提示词.js';
 import { OllamaClient, type OllamaFetchImplementation } from '../services/ollama.js';
 import {
+  assertEditorialRevision,
   assertGenerationContent,
-  assertGenerationResult,
+  assertVerificationReview,
 } from '../validation.js';
 import type { GenerationProvider } from './GenerationProvider.js';
 
-interface OllamaProviderOptions {
+export interface OllamaProviderOptions {
   baseUrl: string;
   model: string;
   timeoutMs?: number;
@@ -38,10 +41,6 @@ const withoutPatternKeywords = (value: unknown): unknown => {
   );
 };
 
-const ollamaGenerationContentJsonSchema = withoutPatternKeywords(
-  generationContentJsonSchema,
-);
-
 export class OllamaProvider implements GenerationProvider {
   readonly name = 'ollama' as const;
   private readonly model: string;
@@ -56,24 +55,29 @@ export class OllamaProvider implements GenerationProvider {
     });
   }
 
-  async generate(input: BriefInput): Promise<GenerationResult> {
-    let content: GenerationContent | undefined;
+  private async requestStructured<T>(
+    prompt: { system: string; user: string },
+    schema: unknown,
+    assertValue: (value: unknown) => asserts value is T,
+  ): Promise<T> {
+    let content: T | undefined;
     let parseError: Error | undefined;
+    const ollamaSchema = withoutPatternKeywords(schema);
 
     for (let attempt = 0; attempt < 2; attempt += 1) {
       const outputText = await this.client.chat({
         model: this.model,
-        format: ollamaGenerationContentJsonSchema,
+        format: ollamaSchema,
         messages: [
-          { role: 'system', content: NEWS_BRIEF_SYSTEM_PROMPT },
-          { role: 'user', content: createNewsBriefUserPrompt(input) },
+          { role: 'system', content: prompt.system },
+          { role: 'user', content: prompt.user },
         ],
       });
 
       try {
         const parsed: unknown = JSON.parse(outputText);
-        assertGenerationContent(parsed);
-        content = parsed as GenerationContent;
+        assertValue(parsed);
+        content = parsed;
         break;
       } catch (error) {
         parseError =
@@ -89,13 +93,37 @@ export class OllamaProvider implements GenerationProvider {
       throw parseError ?? new Error('Ollama 返回内容不是有效 JSON。');
     }
 
-    const result: GenerationResult = {
-      ...content,
-      generatedAt: new Date().toISOString(),
-      mode: 'ollama',
-    };
+    return content;
+  }
 
-    assertGenerationResult(result);
-    return result;
+  generate(context: PlanningContext): Promise<GenerationContent> {
+    return this.requestStructured(
+      buildNewsEditorPrompt(context),
+      generationContentJsonSchema,
+      assertGenerationContent,
+    );
+  }
+
+  verify(
+    context: PlanningContext,
+    draft: GenerationContent,
+  ): Promise<VerificationReview> {
+    return this.requestStructured(
+      buildFactCheckPrompt(context, draft),
+      verificationReviewJsonSchema,
+      assertVerificationReview,
+    );
+  }
+
+  edit(
+    context: PlanningContext,
+    draft: GenerationContent,
+    verification: VerificationReview,
+  ): Promise<EditorialRevision> {
+    return this.requestStructured(
+      buildFinalEditorPrompt(context, draft, verification),
+      editorialRevisionJsonSchema,
+      assertEditorialRevision,
+    );
   }
 }

@@ -4,12 +4,23 @@ import type { GenerationProvider } from './providers/GenerationProvider.js';
 import { MockProvider } from './providers/MockProvider.js';
 import { OllamaProvider } from './providers/OllamaProvider.js';
 import { OpenAIProvider } from './providers/OpenAIProvider.js';
+import { QwenProvider } from './providers/QwenProvider.js';
+import { BraveSearchProvider } from './search/BraveSearchProvider.js';
+import { MockSearchProvider } from './search/MockSearchProvider.js';
 import { GeneratorService } from './services/generator.js';
+import { RetrievalService } from './services/检索服务.js';
 
 loadLocalEnvironment();
 
 const config = readServerConfig();
 const mockProvider = new MockProvider();
+const searchProvider =
+  config.searchProvider === 'brave'
+    ? new BraveSearchProvider({
+        apiKey: config.braveSearchApiKey,
+        timeoutMs: config.braveSearchTimeoutMs,
+      })
+    : new MockSearchProvider();
 const createPrimaryProvider = (): GenerationProvider => {
   if (config.provider === 'ollama') {
     return new OllamaProvider({
@@ -27,12 +38,22 @@ const createPrimaryProvider = (): GenerationProvider => {
     });
   }
 
+  if (config.provider === 'qwen') {
+    return new QwenProvider({
+      baseUrl: config.ollamaBaseUrl,
+      model: config.ollamaModel,
+      timeoutMs: config.ollamaTimeoutMs,
+    });
+  }
+
   return mockProvider;
 };
 
 const generatorService = new GeneratorService(
   createPrimaryProvider(),
   mockProvider,
+  console,
+  new RetrievalService(searchProvider),
 );
 const server = createApiServer(generatorService);
 

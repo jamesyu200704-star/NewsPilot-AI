@@ -6,10 +6,10 @@ NewsPilot AI 重视服务端密钥、用户输入、生成结果完整性和 API
 
 | 版本 | 安全更新 |
 | --- | --- |
-| 0.1.x | 支持 |
-| 低于 0.1.0 | 不支持 |
+| 1.0.x | 支持 |
+| 0.x | 不支持 |
 
-当前项目处于 V0.1 Open Source Release。安全修复以最新的 0.1.x 版本为准。
+当前项目处于 V1.0 News Agent Release。安全修复以最新的 1.0.x 版本为准。
 
 ## 报告安全问题
 
@@ -39,7 +39,7 @@ NewsPilot AI 重视服务端密钥、用户输入、生成结果完整性和 API
 
 ## 密钥与个人信息
 
-- 真实密钥只能存放在未提交的 <code>.env.local</code>、<code>.env</code> 或部署平台服务端 Secret。
+- OpenAI 与 Brave Search 真实密钥只能存放在未提交的 <code>.env.local</code>、<code>.env</code> 或部署平台服务端 Secret。
 - 不得创建 <code>VITE_OPENAI_API_KEY</code>，也不得给任何秘密加 <code>VITE_</code> 前缀。
 - 不得把真实秘密写入源码、测试、README、Issue、PR、构建产物或客户端日志。
 - 测试数据必须使用合成值，不包含真实姓名、电话、邮箱、身份证号或学号。
@@ -49,7 +49,10 @@ NewsPilot AI 重视服务端密钥、用户输入、生成结果完整性和 API
 
 - 浏览器本地 Mock 不发送用户输入。
 - API 模式会把输入发送到 Generator Service；OpenAI 模式还会发送到 OpenAI API。
+- <code>SEARCH_MODE=brave</code> 会把自动生成的检索词发送到 Brave Search API；返回网页摘要视为不可信外部数据。
 - 服务端 OpenAI 请求使用固定 HTTPS 端点、Authorization 请求头、超时、<code>store=false</code> 和严格结构校验。
+- Brave Search 请求使用固定 HTTPS 端点、服务端请求头、超时和 HTTP/HTTPS 来源过滤；密钥不会返回浏览器。
+- Qwen/Ollama/OpenAI 的策划、事实核查和编辑终审分别使用严格 JSON Schema，最终结果还会再次校验。
 - 当前 Node.js HTTP 服务提供 JSON Content-Type 检查、单进程请求窗口和并发上限，但没有账号、鉴权、分布式配额、TLS 或生产监控。
 - 公网部署必须由反向代理或 API 网关提供 TLS、访问控制、按身份分布式限流、成本保护和日志脱敏。
 - 生成内容是策划建议，不是已经完成的采访、调查或事实核验。

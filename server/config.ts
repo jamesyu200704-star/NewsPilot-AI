@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs';
 
-export type ServerProviderMode = 'mock' | 'ollama' | 'openai';
+export type ServerProviderMode = 'mock' | 'ollama' | 'qwen' | 'openai';
+export type SearchProviderMode = 'mock' | 'brave';
 
 export interface ServerConfig {
   host: string;
@@ -12,6 +13,9 @@ export interface ServerConfig {
   ollamaBaseUrl: string;
   ollamaModel: string;
   ollamaTimeoutMs: number;
+  searchProvider: SearchProviderMode;
+  braveSearchApiKey?: string;
+  braveSearchTimeoutMs: number;
 }
 
 export const loadLocalEnvironment = () => {
@@ -39,8 +43,12 @@ export const readServerConfig = (
     ?.trim()
     .toLowerCase();
   const provider: ServerProviderMode =
-    rawProvider === 'ollama' || rawProvider === 'openai'
+    rawProvider === 'ollama' || rawProvider === 'qwen' || rawProvider === 'openai'
       ? rawProvider
+      : 'mock';
+  const searchProvider: SearchProviderMode =
+    environment.SEARCH_MODE?.trim().toLowerCase() === 'brave'
+      ? 'brave'
       : 'mock';
 
   return {
@@ -55,5 +63,11 @@ export const readServerConfig = (
     ),
     ollamaModel: environment.OLLAMA_MODEL?.trim() || 'qwen2.5:1.5b',
     ollamaTimeoutMs: toPositiveInteger(environment.OLLAMA_TIMEOUT_MS, 90_000),
+    searchProvider,
+    braveSearchApiKey: environment.BRAVE_SEARCH_API_KEY,
+    braveSearchTimeoutMs: toPositiveInteger(
+      environment.BRAVE_SEARCH_TIMEOUT_MS,
+      10_000,
+    ),
   };
 };

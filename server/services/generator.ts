@@ -1,5 +1,24 @@
-import type { BriefInput, GenerationResult } from '../../shared/generation.js';
-import { assertGenerationResult } from '../validation.js';
+import type {
+  BriefInput,
+  GenerationResult,
+  RetrievalContext,
+  SearchProviderName,
+} from '../../shared/generation.js';
+import { buildPlanningContext } from '../../shared/新闻方法论.js';
+import { finalizePlanningResult } from '../../shared/新闻工作流.js';
+import {
+  createAgentReview,
+  createMockEditorialRevision,
+  createMockVerificationReview,
+} from '../../shared/mockAgents.js';
+import {
+  assertEditorialRevision,
+  assertEditorialResolvesVerification,
+  assertGenerationContent,
+  assertGenerationResult,
+  assertVerificationReview,
+  assertVerificationEvidence,
+} from '../validation.js';
 import type { GenerationProvider } from '../providers/GenerationProvider.js';
 import { getOllamaUserMessage } from './ollama.js';
 
@@ -7,11 +26,17 @@ interface ServiceLogger {
   warn(message: string): void;
 }
 
+interface RetrievalPipeline {
+  readonly providerName?: SearchProviderName;
+  retrieve(input: BriefInput): Promise<RetrievalContext>;
+}
+
 export class GeneratorService {
   constructor(
     private readonly primaryProvider: GenerationProvider,
     private readonly fallbackProvider: GenerationProvider,
     private readonly logger: ServiceLogger = console,
+    private readonly retrievalPipeline?: RetrievalPipeline,
   ) {}
 
   get providerName() {
@@ -22,9 +47,60 @@ export class GeneratorService {
     return this.fallbackProvider.name;
   }
 
+  get retrievalProviderName(): SearchProviderName {
+    return this.retrievalPipeline?.providerName ?? 'mock';
+  }
+
   async generate(input: BriefInput): Promise<GenerationResult> {
+    const baseContext = buildPlanningContext(input);
+    const context = this.retrievalPipeline
+      ? {
+          ...baseContext,
+          retrievalContext: await this.retrievalPipeline.retrieve(
+            baseContext.input,
+          ),
+        }
+      : baseContext;
+
+    const runProviderWorkflow = async (provider: GenerationProvider) => {
+      const draft = await provider.generate(context);
+      assertGenerationContent(draft);
+      const usedVerificationFallback = !provider.verify;
+      const verification = provider.verify
+        ? await provider.verify(context, draft)
+        : createMockVerificationReview(context, draft);
+      assertVerificationReview(verification);
+      assertVerificationEvidence(verification, context.retrievalContext);
+      const usedEditorFallback = !provider.edit;
+      const editorial = provider.edit
+        ? await provider.edit(context, draft, verification)
+        : createMockEditorialRevision(context, draft, verification);
+      assertEditorialRevision(editorial);
+      assertEditorialResolvesVerification(editorial, verification);
+
+      return {
+        editorial,
+        agentReview: createAgentReview(
+          provider.name,
+          verification,
+          editorial.decision,
+          [
+            'completed',
+            usedVerificationFallback ? 'fallback' : 'completed',
+            usedEditorFallback ? 'fallback' : 'completed',
+          ],
+        ),
+      };
+    };
+
     try {
-      const result = await this.primaryProvider.generate(input);
+      const workflow = await runProviderWorkflow(this.primaryProvider);
+      const result = finalizePlanningResult(
+        context,
+        workflow.editorial.content,
+        this.primaryProvider.name,
+        workflow.agentReview,
+      );
       assertGenerationResult(result);
       return result;
     } catch (error) {
@@ -42,17 +118,19 @@ export class GeneratorService {
           message,
       );
 
-      const fallbackResult = await this.fallbackProvider.generate(input);
-      assertGenerationResult(fallbackResult);
+      const fallbackWorkflow = await runProviderWorkflow(this.fallbackProvider);
       const providerUserMessage =
-        this.primaryProvider.name === 'ollama'
+        this.primaryProvider.name === 'ollama' ||
+        this.primaryProvider.name === 'qwen'
           ? getOllamaUserMessage(error)
           : 'OpenAI 生成暂时不可用，';
-      const finalResult: GenerationResult = {
-        ...fallbackResult,
-        fallbackNotice:
-          providerUserMessage + '已自动切换到 Demo 模式。',
-      };
+      const finalResult = finalizePlanningResult(
+        context,
+        fallbackWorkflow.editorial.content,
+        this.fallbackProvider.name,
+        fallbackWorkflow.agentReview,
+        providerUserMessage + '已自动切换到 Demo 模式。',
+      );
       assertGenerationResult(finalResult);
       return finalResult;
     }

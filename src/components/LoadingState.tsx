@@ -1,6 +1,12 @@
 import { Check, SpinnerGap } from '@phosphor-icons/react';
 
-const steps = ['梳理人物线索', '对照制度机制', '检查数据路径'];
+const steps = [
+  '解析线索与六维评分',
+  '检索知识库与公开来源',
+  '新闻策划 Agent 生成草案',
+  '事实核查 Agent 审核证据',
+  '新闻编辑 Agent 完成终审',
+];
 
 export function LoadingState() {
   return (
@@ -14,8 +20,8 @@ export function LoadingState() {
         <span>NP</span>
       </div>
 
-      <h2>拆解主题，建立采访计划。</h2>
-      <p>正在分析新闻价值、采访路径与事实核查重点。</p>
+      <h2>让新闻方法先于模型工作。</h2>
+      <p>正在执行方法论、检索增强、策划、事实核查与编辑终审。</p>
 
       <ol className="loading-state__steps">
         {steps.map((step) => (
@@ -29,7 +35,7 @@ export function LoadingState() {
       <div className="loading-state__progress" aria-hidden="true">
         <span />
       </div>
-      <span className="sr-only">系统正在生成三个新闻报道角度，请稍候。</span>
+      <span className="sr-only">系统正在执行新闻策划工作流，请稍候。</span>
     </section>
   );
 }

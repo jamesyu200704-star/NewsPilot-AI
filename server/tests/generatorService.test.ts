@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createMockGenerationResult } from '../../shared/mockGeneration.js';
+import { createMockGenerationContent } from '../../shared/mockGeneration.js';
 import type {
-  BriefInput,
+  GenerationContent,
   GenerationMode,
-  GenerationResult,
+  PlanningContext,
 } from '../../shared/generation.js';
+import { buildPlanningContext } from '../../shared/新闻方法论.js';
 import type { GenerationProvider } from '../providers/GenerationProvider.js';
 import { MockProvider } from '../providers/MockProvider.js';
 import { OpenAIProvider } from '../providers/OpenAIProvider.js';
@@ -19,10 +20,10 @@ import { sampleInput } from './fixtures.js';
 class StaticProvider implements GenerationProvider {
   constructor(
     readonly name: GenerationMode,
-    private readonly result: GenerationResult | Error,
+    private readonly result: GenerationContent | Error,
   ) {}
 
-  async generate(_input: BriefInput): Promise<GenerationResult> {
+  async generate(_context: PlanningContext): Promise<GenerationContent> {
     if (this.result instanceof Error) {
       throw this.result;
     }
@@ -34,18 +35,33 @@ class StaticProvider implements GenerationProvider {
 const silentLogger = { warn: (_message: string) => undefined };
 
 test('主 Provider 成功时直接返回 OpenAI 结果', async () => {
-  const openAIResult: GenerationResult = {
-    ...createMockGenerationResult(sampleInput),
-    mode: 'openai',
-  };
+  const openAIContent = createMockGenerationContent(
+    buildPlanningContext(sampleInput),
+  );
   const service = new GeneratorService(
-    new StaticProvider('openai', openAIResult),
+    new StaticProvider('openai', openAIContent),
     new MockProvider(),
     silentLogger,
   );
 
   const result = await service.generate(sampleInput);
   assert.equal(result.mode, 'openai');
+});
+
+test('生成服务先执行新闻方法论，再返回完整新闻策划报告', async () => {
+  const mockProvider = new MockProvider();
+  const service = new GeneratorService(mockProvider, mockProvider, silentLogger);
+
+  const result = await service.generate(sampleInput);
+
+  assert.equal(result.topicAnalysis.category, 'education');
+  assert.equal(result.newsValueAssessment.dimensions.length, 6);
+  assert.ok(result.newsValueAssessment.overallScore > 0);
+  assert.ok(result.ruleDecision.matches.length > 0);
+  assert.ok(result.dataNeeds.length >= 4);
+  assert.ok(result.verificationChecklist.length >= 4);
+  assert.ok(result.risks.length >= 3);
+  assert.ok(result.nextActions.length >= 3);
 });
 
 test('OpenAI 请求失败时自动降级到 MockProvider', async () => {
@@ -85,14 +101,12 @@ test('OpenAI HTTP 请求返回非成功状态时自动降级到 MockProvider', a
 });
 
 test('主 Provider 返回无效结构时同样降级到 MockProvider', async () => {
-  const invalidResult = {
+  const invalidContent = {
     topicSummary: '无效结果',
     angles: [],
-    generatedAt: new Date().toISOString(),
-    mode: 'openai',
-  } as unknown as GenerationResult;
+  } as unknown as GenerationContent;
   const service = new GeneratorService(
-    new StaticProvider('openai', invalidResult),
+    new StaticProvider('openai', invalidContent),
     new MockProvider(),
     silentLogger,
   );

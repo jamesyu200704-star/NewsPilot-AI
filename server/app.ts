@@ -66,6 +66,7 @@ export const createApiServer = (
       ok: true,
       provider: generatorService.providerName,
       fallbackProvider: generatorService.fallbackProviderName,
+      searchProvider: generatorService.retrievalProviderName,
     });
   });
   app.use('/api/generate', createGenerateRouter(generatorService, options));

@@ -14,6 +14,7 @@ export type ProviderStatus =
   | {
       state: 'ready';
       provider: Exclude<GenerationMode, 'mock'>;
+      searchProvider?: 'mock' | 'brave';
     }
   | {
       state: 'unavailable';
@@ -39,6 +40,7 @@ interface HealthResponse {
   ok: true;
   provider: GenerationMode;
   fallbackProvider: GenerationMode;
+  searchProvider?: 'mock' | 'brave';
 }
 
 const isHealthResponse = (value: unknown): value is HealthResponse => {
@@ -49,8 +51,12 @@ const isHealthResponse = (value: unknown): value is HealthResponse => {
   const response = value as Record<string, unknown>;
   return (
     response.ok === true &&
-    ['mock', 'ollama', 'openai'].includes(String(response.provider)) &&
-    ['mock', 'ollama', 'openai'].includes(String(response.fallbackProvider))
+    ['mock', 'ollama', 'qwen', 'openai'].includes(String(response.provider)) &&
+    ['mock', 'ollama', 'qwen', 'openai'].includes(
+      String(response.fallbackProvider),
+    ) &&
+    (!Object.hasOwn(response, 'searchProvider') ||
+      ['mock', 'brave'].includes(String(response.searchProvider)))
   );
 };
 
@@ -59,9 +65,23 @@ export const checkingProviderStatus: ProviderStatus = {
   provider: null,
 };
 
+export const unavailableProviderStatus: ProviderStatus = {
+  state: 'unavailable',
+  provider: null,
+};
+
+export const shouldDetectGenerationProvider = (
+  requestedMode: ClientGenerationMode,
+  isProduction: boolean,
+) => !isProduction || requestedMode === 'local-ai';
+
 export const getProviderPresentation = (
   status: ProviderStatus,
 ): ProviderPresentation => {
+  const searchPrivacyNotice =
+    status.state === 'ready' && status.searchProvider === 'brave'
+      ? ' 自动生成的检索词会发送到 Brave Search API。'
+      : '';
   if (status.state === 'checking') {
     return {
       optionTitle: '正在检测生成服务',
@@ -79,7 +99,8 @@ export const getProviderPresentation = (
       optionDescription: '通过项目后端调用已配置的 Ollama / Qwen',
       activeLabel: 'Ollama AI',
       privacyNotice:
-        '输入会发送到项目后端与已配置的 Ollama 服务；请确认该地址可信，并勿填写敏感个人信息。',
+        '输入会发送到项目后端与已配置的 Ollama 服务；请确认该地址可信，并勿填写敏感个人信息。' +
+        searchPrivacyNotice,
       footerNotice: '输入由已配置的 Ollama 服务处理，生成内容需独立核验',
       optionDisabled: false,
     };
@@ -91,8 +112,22 @@ export const getProviderPresentation = (
       optionDescription: '通过项目后端调用 OpenAI 模型',
       activeLabel: 'OpenAI',
       privacyNotice:
-        '输入会经项目后端发送到 OpenAI API；请勿填写敏感个人信息。',
+        '输入会经项目后端发送到 OpenAI API；请勿填写敏感个人信息。' +
+        searchPrivacyNotice,
       footerNotice: '输入会发送到 OpenAI API，生成内容需独立核验',
+      optionDisabled: false,
+    };
+  }
+
+  if (status.state === 'ready' && status.provider === 'qwen') {
+    return {
+      optionTitle: 'Qwen Agent',
+      optionDescription: '通过本地 Ollama 运行策划、核查、编辑三个 Agent',
+      activeLabel: 'Qwen Agent',
+      privacyNotice:
+        '输入会发送到项目后端与本机 Qwen 模型；请勿填写敏感个人信息。' +
+        searchPrivacyNotice,
+      footerNotice: '本机 Qwen 执行三 Agent 工作流，生成内容需独立核验',
       optionDisabled: false,
     };
   }
@@ -152,8 +187,18 @@ export async function detectGenerationProvider(
       return { state: 'unavailable', provider: null };
     }
 
-    if (payload.provider === 'ollama' || payload.provider === 'openai') {
-      return { state: 'ready', provider: payload.provider };
+    if (
+      payload.provider === 'ollama' ||
+      payload.provider === 'qwen' ||
+      payload.provider === 'openai'
+    ) {
+      return {
+        state: 'ready',
+        provider: payload.provider,
+        ...(payload.searchProvider
+          ? { searchProvider: payload.searchProvider }
+          : {}),
+      };
     }
 
     return { state: 'unavailable', provider: 'mock' };

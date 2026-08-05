@@ -1,4 +1,17 @@
-import type { BriefInput, GenerationResult, StoryAngle } from './generation.js';
+import type {
+  BriefInput,
+  GenerationContent,
+  GenerationResult,
+  PlanningContext,
+  StoryAngle,
+} from './generation.js';
+import { buildPlanningContext } from './新闻方法论.js';
+import { finalizePlanningResult } from './新闻工作流.js';
+import {
+  createAgentReview,
+  createMockEditorialRevision,
+  createMockVerificationReview,
+} from './mockAgents.js';
 
 export const DEFAULT_MOCK_DELAY = 800;
 
@@ -294,7 +307,27 @@ const createAngles = (input: BriefInput): StoryAngle[] => {
   ];
 };
 
-export function createMockGenerationResult(input: BriefInput): GenerationResult {
+const unique = (items: string[]) => [...new Set(items)];
+
+const completeList = (
+  items: string[],
+  fallbacks: string[],
+  minimum: number,
+  maximum: number,
+) => {
+  const completed = unique([...items, ...fallbacks]).slice(0, maximum);
+
+  if (completed.length < minimum) {
+    throw new Error('Mock 生成内容未达到最小清单数量。');
+  }
+
+  return completed;
+};
+
+export function createMockGenerationContent(
+  context: PlanningContext,
+): GenerationContent {
+  const { input, ruleDecision } = context;
   const topic = clean(input.topic);
   const reportType = clean(input.reportType) || '深度报道';
   const audience = clean(input.audience) || '高校学生';
@@ -312,9 +345,69 @@ export function createMockGenerationResult(input: BriefInput): GenerationResult 
       reportType +
       '方案。',
     angles: createAngles(input),
-    generatedAt: new Date().toISOString(),
-    mode: 'mock',
+    dataNeeds: completeList(
+      ruleDecision.requiredSources,
+      [
+        '事件发生与规则变化的完整时间线',
+        '目标群体规模、样本结构与统计口径',
+        '相关责任主体的正式回应与可联系渠道',
+        '能够交叉验证关键判断的第二独立来源',
+      ],
+      4,
+      10,
+    ),
+    verificationChecklist: completeList(
+      ruleDecision.verificationPriorities,
+      [
+        '为每项事实判断记录原始来源、发布日期与访问时间',
+        '区分用户线索、受访者观点、公开事实和记者推断',
+        '向被质疑或承担责任的一方提供充分回应机会',
+        '确认采访授权、匿名边界和个人信息使用范围',
+      ],
+      4,
+      12,
+    ),
+    risks: completeList(
+      ruleDecision.riskFlags,
+      [
+        '线索阶段的信息可能不完整，禁止将推测写成确定事实',
+        '样本范围有限时不得外推为普遍结论',
+        '涉及个人经历时应遵循最小必要披露原则',
+      ],
+      3,
+      10,
+    ),
+    nextActions: [
+      `从“${topic}”相关群体中完成至少 3 次探索性初访`,
+      '收集规则引擎列出的原始文件、公开数据和时间线材料',
+      '建立事实主张清单，逐项标记已支持、待核验或存在冲突',
+      '根据初访与资料结果确认主角度，并向关键责任方发出采访请求',
+    ],
   };
+}
+
+export function createMockGenerationResult(input: BriefInput): GenerationResult {
+  const context = buildPlanningContext(input);
+  const draft = createMockGenerationContent(context);
+  const verification = createMockVerificationReview(context, draft);
+  const editorial = createMockEditorialRevision(context, draft, verification);
+  return finalizePlanningResult(
+    context,
+    editorial.content,
+    'mock',
+    createAgentReview('mock', verification, editorial.decision),
+  );
+}
+
+export async function generateMockContent(
+  context: PlanningContext,
+  delayMs = 0,
+): Promise<GenerationContent> {
+  if (delayMs > 0) {
+    await wait(delayMs);
+  }
+
+  return createMockGenerationContent(context);
 }
 
 export async function generateMockBrief(

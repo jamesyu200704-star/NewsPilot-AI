@@ -1,7 +1,7 @@
 {
   "name": "newspilot-ai",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "AI-assisted news topic planning and interview preparation tool for journalism students.",
   "license": "MIT",
   "type": "module",
@@ -15,7 +15,7 @@
     "build:server": "tsc -p tsconfig.server.json",
     "build": "tsc -b && npm run build:server && vite build",
     "start:server": "node dist-server/server/index.js",
-    "test:server": "npm run build:server && node --test dist-server/server/tests/validation.test.js dist-server/server/tests/config.test.js dist-server/server/tests/generatorService.test.js dist-server/server/tests/ollamaProvider.test.js dist-server/server/tests/openAIProvider.test.js dist-server/server/tests/api.test.js dist-server/server/tests/clientGenerator.test.js dist-server/server/tests/clientMode.test.js dist-server/server/tests/clientProviderStatus.test.js dist-server/server/tests/markdownExport.test.js",
+    "test:server": "npm run build:server && node --test dist-server/server/tests/validation.test.js dist-server/server/tests/config.test.js dist-server/server/tests/新闻方法论.test.js dist-server/server/tests/提示词引擎.test.js dist-server/server/tests/检索与知识库.test.js dist-server/server/tests/braveSearchProvider.test.js dist-server/server/tests/工作流检索集成.test.js dist-server/server/tests/多Agent工作流.test.js dist-server/server/tests/generatorService.test.js dist-server/server/tests/ollamaProvider.test.js dist-server/server/tests/qwenProvider.test.js dist-server/server/tests/openAIProvider.test.js dist-server/server/tests/api.test.js dist-server/server/tests/clientGenerator.test.js dist-server/server/tests/clientMode.test.js dist-server/server/tests/clientProviderStatus.test.js dist-server/server/tests/markdownExport.test.js",
     "test": "npm run test:server",
     "preview": "vite preview"
   },

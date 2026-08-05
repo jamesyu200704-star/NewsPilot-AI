@@ -17,7 +17,9 @@
   },
   "include": [
     "server/**/*.ts",
+    "knowledge/**/*.ts",
     "prompts/**/*.ts",
+    "rules/**/*.ts",
     "shared/**/*.ts",
     "src/services/apiGenerator.ts",
     "src/services/generationMode.ts",

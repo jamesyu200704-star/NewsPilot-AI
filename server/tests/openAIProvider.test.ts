@@ -1,17 +1,25 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { buildNewsEditorPrompt } from '../../prompts/新闻编辑提示词.js';
 import {
-  createNewsBriefUserPrompt,
-  NEWS_BRIEF_SYSTEM_PROMPT,
-} from '../../prompts/newsBrief.js';
-import { generationContentJsonSchema } from '../../shared/generation.js';
-import { createMockGenerationResult } from '../../shared/mockGeneration.js';
+  editorialRevisionJsonSchema,
+  generationContentJsonSchema,
+  verificationReviewJsonSchema,
+} from '../../shared/generation.js';
+import {
+  createMockEditorialRevision,
+  createMockVerificationReview,
+} from '../../shared/mockAgents.js';
+import { createMockGenerationContent } from '../../shared/mockGeneration.js';
+import { buildPlanningContext } from '../../shared/新闻方法论.js';
 import {
   OpenAIProvider,
   type FetchImplementation,
 } from '../providers/OpenAIProvider.js';
 import { SchemaValidationError } from '../validation.js';
 import { sampleInput } from './fixtures.js';
+
+const sampleContext = buildPlanningContext(sampleInput);
 
 const toOpenAIResponse = (content: unknown) =>
   new Response(
@@ -33,8 +41,7 @@ const toOpenAIResponse = (content: unknown) =>
 
 test('OpenAIProvider 使用 Responses JSON Schema 并解析有效结果', async () => {
   let capturedInit: RequestInit | undefined;
-  const content = createMockGenerationResult(sampleInput);
-  const { generatedAt: _generatedAt, mode: _mode, ...generationContent } = content;
+  const generationContent = createMockGenerationContent(sampleContext);
   const fakeFetch: FetchImplementation = async (_input, init) => {
     capturedInit = init;
     return toOpenAIResponse(generationContent);
@@ -46,7 +53,8 @@ test('OpenAIProvider 使用 Responses JSON Schema 并解析有效结果', async 
     fetchImplementation: fakeFetch,
   });
 
-  const result = await provider.generate(sampleInput);
+  const result = await provider.generate(sampleContext);
+  const prompt = buildNewsEditorPrompt(sampleContext);
   const headers = new Headers(capturedInit?.headers);
   const requestBody = JSON.parse(String(capturedInit?.body)) as {
     model: string;
@@ -55,14 +63,14 @@ test('OpenAIProvider 使用 Responses JSON Schema 并解析有效结果', async 
     text: { format: { type: string; strict: boolean; schema: unknown } };
   };
 
-  assert.equal(result.mode, 'openai');
   assert.equal(result.angles.length, 3);
+  assert.ok(result.dataNeeds.length >= 4);
   assert.equal(headers.get('Authorization'), 'Bearer ' + serverCredential);
   assert.equal(requestBody.model, 'test-model');
   assert.equal(requestBody.store, false);
   assert.deepEqual(requestBody.input, [
-    { role: 'system', content: NEWS_BRIEF_SYSTEM_PROMPT },
-    { role: 'user', content: createNewsBriefUserPrompt(sampleInput) },
+    { role: 'system', content: prompt.system },
+    { role: 'user', content: prompt.user },
   ]);
   assert.equal(requestBody.text.format.type, 'json_schema');
   assert.equal(requestBody.text.format.strict, true);
@@ -79,9 +87,50 @@ test('OpenAIProvider 拒绝不符合 Schema 的 AI 内容', async () => {
   });
 
   await assert.rejects(
-    () => provider.generate(sampleInput),
+    () => provider.generate(sampleContext),
     (error) => error instanceof SchemaValidationError,
   );
+});
+
+test('OpenAIProvider 为事实核查和编辑终审分别发起结构化调用', async () => {
+  const draft = createMockGenerationContent(sampleContext);
+  const verification = createMockVerificationReview(sampleContext, draft);
+  const editorial = createMockEditorialRevision(
+    sampleContext,
+    draft,
+    verification,
+  );
+  const requestBodies: Array<{
+    text: { format: { name: string; schema: unknown } };
+    input: Array<{ content: string }>;
+  }> = [];
+  const responses = [verification, editorial];
+  const provider = new OpenAIProvider({
+    apiKey: 'server-search-placeholder',
+    model: 'test-model',
+    fetchImplementation: async (_input, init) => {
+      requestBodies.push(JSON.parse(String(init?.body)));
+      return toOpenAIResponse(responses[requestBodies.length - 1]);
+    },
+  });
+
+  const reviewed = await provider.verify(sampleContext, draft);
+  const revised = await provider.edit(sampleContext, draft, reviewed);
+
+  assert.equal(requestBodies.length, 2);
+  assert.equal(requestBodies[0]?.text.format.name, 'news_fact_check_review');
+  assert.deepEqual(
+    requestBodies[0]?.text.format.schema,
+    verificationReviewJsonSchema,
+  );
+  assert.match(requestBodies[0]?.input[0]?.content ?? '', /事实核查 Agent/u);
+  assert.equal(requestBodies[1]?.text.format.name, 'news_editorial_revision');
+  assert.deepEqual(
+    requestBodies[1]?.text.format.schema,
+    editorialRevisionJsonSchema,
+  );
+  assert.match(requestBodies[1]?.input[0]?.content ?? '', /新闻编辑 Agent/u);
+  assert.equal(revised.decision.disposition, 'needs-reporting');
 });
 
 test('服务端没有 Key 时 OpenAIProvider 明确失败且不会发出请求', async () => {
@@ -94,6 +143,6 @@ test('服务端没有 Key 时 OpenAIProvider 明确失败且不会发出请求',
     },
   });
 
-  await assert.rejects(() => provider.generate(sampleInput), /OPENAI_API_KEY/);
+  await assert.rejects(() => provider.generate(sampleContext), /OPENAI_API_KEY/);
   assert.equal(requested, false);
 });

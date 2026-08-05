@@ -217,7 +217,7 @@ export function TopicForm({
                   <MagicWand weight="bold" />
                 )}
               </span>
-              <span>{isLoading ? '生成中...' : '生成选题方案'}</span>
+              <span>{isLoading ? '工作流运行中...' : '生成新闻策划报告'}</span>
               <ArrowRight className="generate-button__arrow" aria-hidden="true" weight="bold" />
             </button>
             <p>

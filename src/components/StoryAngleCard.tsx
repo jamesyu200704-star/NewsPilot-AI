@@ -46,8 +46,8 @@ export function StoryAngleCard({
         <div className="angle-card__label-row">
           <span className="angle-badge">{meta.label}</span>
 
-          <div className="value-score" aria-label={'新闻价值评分：' + angle.newsValueScore.toFixed(1) + ' 分，满分 5 分'}>
-            <span>新闻价值</span>
+          <div className="value-score" aria-label={'报道角度潜力评分：' + angle.newsValueScore.toFixed(1) + ' 分，满分 5 分'}>
+            <span>角度潜力</span>
             <strong>{angle.newsValueScore.toFixed(1)}</strong>
             <small>/ 5</small>
           </div>

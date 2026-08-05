@@ -13,6 +13,10 @@ import {
   storyAngleToMarkdown,
 } from '../utils/markdownExport';
 import { StoryAngleCard } from './StoryAngleCard';
+import { ExecutionChecklist } from './执行清单';
+import { MethodologyOverview } from './方法论概览';
+import { EvidenceRetrieval } from './证据检索';
+import { AgentReviewPanel } from './Agent审核';
 
 interface ResultSectionProps {
   input: BriefInput;
@@ -69,9 +73,9 @@ export function ResultSection({ input, result }: ResultSectionProps) {
     <section className="results" aria-labelledby="results-title">
       <header className="results__header">
         <div className="results__headline">
-          <span className="section-kicker">策划结果</span>
+          <span className="section-kicker">News workflow / V1.0</span>
           <h2 id="results-title" tabIndex={-1}>
-            3 个报道角度
+            新闻策划报告
           </h2>
           <p>{result.topicSummary}</p>
         </div>
@@ -108,6 +112,18 @@ export function ResultSection({ input, result }: ResultSectionProps) {
         </div>
       ) : null}
 
+      <MethodologyOverview result={result} />
+
+      <EvidenceRetrieval result={result} />
+
+      <header className="results__section-heading">
+        <div>
+          <span className="section-kicker">Story angles / 04</span>
+          <h3>三个互补的报道切口</h3>
+        </div>
+        <p>人物进入现场，制度解释机制，趋势验证规模。</p>
+      </header>
+
       <div className="results__cards">
         {result.angles.map((angle, index) => (
           <StoryAngleCard
@@ -119,6 +135,10 @@ export function ResultSection({ input, result }: ResultSectionProps) {
           />
         ))}
       </div>
+
+      <AgentReviewPanel result={result} />
+
+      <ExecutionChecklist result={result} />
 
       <div className={'feedback ' + (feedback ? 'feedback--visible' : '')} role="status" aria-live="polite">
         {feedback}

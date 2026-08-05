@@ -20,4 +20,5 @@ Thumbs.db
 
 .playwright-cli/
 output/
+演示视频/
 .vercel/

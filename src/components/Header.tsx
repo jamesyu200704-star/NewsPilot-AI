@@ -21,12 +21,12 @@ export function Header({
           <div className="brand__name">
             NewsPilot
           </div>
-          <p>AI 新闻选题与采访策划助手</p>
+          <p>Search · RAG · Multi-Agent 新闻工作流</p>
         </div>
       </div>
 
       <div className="app-header__meta" aria-label="应用状态">
-        <span className="app-header__label">选题研究工具</span>
+        <span className="app-header__label">News Agent V1.0</span>
         <span className="mode-badge">
           {generationMode === 'local-ai'
             ? providerPresentation.activeLabel

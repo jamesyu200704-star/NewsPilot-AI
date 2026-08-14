@@ -1,0 +1,119 @@
+{
+  "format": "newspilot-developer-qa",
+  "dataVersion": 1,
+  "testedAt": "2026-08-13T10:00:00.000Z",
+  "testedBy": "Codex developer QA（非真实用户）",
+  "environment": {
+    "browser": "Chromium headless",
+    "desktopViewport": "1440x1000",
+    "mobileViewports": ["390x844", "360x800"],
+    "generationMode": "mock",
+    "researchMode": false
+  },
+  "researchDisclaimer": [
+    "当前尚未完成真实用户验证。",
+    "以下内容为测试框架或模拟演示数据。"
+  ],
+  "items": [
+    {
+      "id": "WF-01",
+      "category": "workflow",
+      "title": "人物特稿完整流程",
+      "expectedResult": "项目可导入并完成策划、三类采访、笔记、人工转写、引语审核、大纲、自查和导出检查。",
+      "actualResult": "导入后立即打开；完成 3/3 次虚构验收采访，人工转写与候选引语可追溯，三段人物结构可保存并在刷新后恢复。",
+      "status": "passed",
+      "severityIfFailed": "critical",
+      "notes": "使用虚构教学内容；不计入真实用户研究。"
+    },
+    {
+      "id": "WF-02",
+      "category": "workflow",
+      "title": "校园调查完整流程",
+      "expectedResult": "事实、传闻、假设、多方信源、证据缺口和调查结构保持区分。",
+      "actualResult": "完成 4/4 次虚构验收采访；生成并保留 11 项证据缺口，校园现象结构正确，关键主张在无证据时继续阻断。",
+      "status": "passed",
+      "severityIfFailed": "critical",
+      "notes": "不同观点与待核验状态未被自动裁决。"
+    },
+    {
+      "id": "WF-03",
+      "category": "workflow",
+      "title": "政策观察完整流程",
+      "expectedResult": "政策原文、执行者、受影响者、执行差异和冲突保持显式。",
+      "actualResult": "完成 3/3 次虚构验收采访；政策执行结构、原始文件缺口、对立观点缺口与未核实状态均可见。",
+      "status": "passed",
+      "severityIfFailed": "critical",
+      "notes": "系统没有把虚构通知截图或采访陈述升级为已核实事实。"
+    },
+    {
+      "id": "DP-01",
+      "category": "data_persistence",
+      "title": "刷新恢复",
+      "expectedResult": "刷新后项目、采访记录和提纲仍存在。",
+      "actualResult": "刷新后项目名称、三段人物提纲和执行记录均恢复。",
+      "status": "passed",
+      "severityIfFailed": "critical"
+    },
+    {
+      "id": "DP-02",
+      "category": "data_persistence",
+      "title": "删除项目",
+      "expectedResult": "二次确认后从本地存储删除。",
+      "actualResult": "确认删除后目标项目从项目列表与 localStorage 消失。",
+      "status": "passed",
+      "severityIfFailed": "critical"
+    },
+    {
+      "id": "PR-EXPORT",
+      "category": "privacy",
+      "title": "公开与课程导出脱敏",
+      "expectedResult": "真实身份、联系方式、私密/off-record 笔记和未确认引语不进入导出。",
+      "actualResult": "向 UI 写入四类唯一哨兵后下载 8 个单文件；Markdown、CSV 与 DOCX OOXML 扫描均为 0 命中。完整提交包在关键主张未核实时被拒绝。",
+      "status": "passed",
+      "severityIfFailed": "critical"
+    },
+    {
+      "id": "EX-DOCX",
+      "category": "export",
+      "title": "DOCX 打开与中文排版",
+      "expectedResult": "Word 文档可打开，中文标题和段落结构正常。",
+      "actualResult": "采访提纲与报道提纲 DOCX 均为有效 OOXML，中文文本和层级完整；沿用 P2 阶段已完成的视觉打开检查。",
+      "status": "passed",
+      "severityIfFailed": "critical",
+      "notes": "本轮复验时 LibreOffice 不可用，后台 Word 转 PDF超时；因此没有生成新的渲染截图。"
+    },
+    {
+      "id": "MB-CORE",
+      "category": "mobile",
+      "title": "移动端采访核心流程",
+      "expectedResult": "360/390 宽度下核心页面无横向溢出，采访笔记可保存。",
+      "actualResult": "采访对象、采访提纲、采访记录和导出页在 360x800 与 390x844 无横向溢出；360x800 下成功保存一条虚构移动端验收笔记。2026-08-14 追加验证 375x812 Composer：左右安全边距 16px、按钮 48x48、无横向溢出，Mock 生成与刷新恢复通过。",
+      "status": "passed",
+      "severityIfFailed": "high",
+      "notes": "浏览器视口验收通过；尚未在真实手机硬件上复测。"
+    },
+    {
+      "id": "AC-01",
+      "category": "accessibility",
+      "title": "键盘焦点",
+      "expectedResult": "主要操作可聚焦，隐藏文件输入不进入 Tab 顺序。",
+      "actualResult": "首个 Tab 焦点为返回首页链接，隐藏文件输入已从 Tab 顺序移除；研究模式盲评工具展开后的焦点顺序为评分标准、案例编号、NewsPilot 输出。全流程读屏测试尚未执行。",
+      "status": "needs_review",
+      "severityIfFailed": "high"
+    },
+    {
+      "id": "PF-01",
+      "category": "performance",
+      "title": "公开构建运行",
+      "expectedResult": "主流程无持续冻结或控制台错误。",
+      "actualResult": "三套项目与九个执行页面切换正常，公开构建控制台 0 error / 0 warning。",
+      "status": "passed",
+      "severityIfFailed": "high"
+    }
+  ],
+  "knownLimitations": [
+    "开发者 QA 不能证明学生能理解流程，也不能替代真实用户测试。",
+    "尚未在真实手机硬件和完整读屏环境复测。",
+    "无真实公开证据的虚构验收项目会保留关键主张阻断，这是预期安全行为。"
+  ]
+}

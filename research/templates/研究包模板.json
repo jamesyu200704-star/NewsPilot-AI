@@ -1,0 +1,11 @@
+{
+  "$schema": "../schemas/research-data-bundle.schema.json",
+  "format": "newspilot-research-bundle",
+  "schemaVersion": 2,
+  "exportedAt": "2026-08-13T00:00:00.000Z",
+  "participants": [],
+  "sessions": [],
+  "observations": [],
+  "events": [],
+  "issues": []
+}

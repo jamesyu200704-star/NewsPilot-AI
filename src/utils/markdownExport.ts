@@ -215,7 +215,7 @@ export function buildMarkdown(input: BriefInput, result: GenerationResult): stri
     '',
     '> 主题：' + escapeMarkdownText(input.topic),
     '',
-    '> 由 NewsPilot AI V1.0 ' +
+    '> 由 NewsPilot AI Beta ' +
       generationMode +
       ' 模式生成。系统输出是采访与核查计划，不是已经完成的事实结论。',
     '',

@@ -1,0 +1,14 @@
+{
+  "format": "newspilot-user-test-results",
+  "dataVersion": 1,
+  "status": "not_started",
+  "studyId": "",
+  "protocolVersion": "p0-v1",
+  "startedAt": null,
+  "completedAt": null,
+  "participants": [],
+  "taskObservations": [],
+  "postTestResponses": [],
+  "limitations": [],
+  "notes": "空模板；不得填写虚构参与者或结果。"
+}

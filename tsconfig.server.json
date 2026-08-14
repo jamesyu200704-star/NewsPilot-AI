@@ -18,12 +18,15 @@
   "include": [
     "server/**/*.ts",
     "knowledge/**/*.ts",
+    "strategy-library/**/*.ts",
+    "evals/**/*.ts",
     "prompts/**/*.ts",
     "rules/**/*.ts",
     "shared/**/*.ts",
     "src/services/apiGenerator.ts",
     "src/services/generationMode.ts",
     "src/services/providerStatus.ts",
+    "src/services/本地项目仓库.ts",
     "src/types/index.ts",
     "src/utils/markdownExport.ts"
   ]

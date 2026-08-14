@@ -1,0 +1,12 @@
+{
+  "format": "newspilot-local-projects", "dataVersion": 3, "exportedAt": "2026-08-13T00:00:00.000Z",
+  "projects": [{
+    "dataVersion": 3, "id": "example-profile-feature", "name": "虚构示例：无障碍志愿者人物特稿",
+    "brief": { "mode": "course", "rawTopic": "虚构任务：持续参与校园无障碍志愿服务的学生", "assignmentType": "人物特稿", "courseName": "新闻采访与写作", "deadline": "2026-09-01T23:59", "targetLength": 2500, "minimumInterviewees": 3, "geographicScope": "虚构校园", "targetAudience": "课程师生", "availableInterviewees": ["虚构主角", "虚构同行者", "虚构指导者"], "existingMaterials": ["虚构活动时间表"], "reportingResources": ["1 名学生记者"], "ethicalConstraints": ["只使用虚构身份", "引语必须人工确认"], "requiresDifferentSourceTypes": true, "requiresHumanStory": true },
+    "plan": null, "selectedAngleId": "",
+    "evidenceWorkspace": { "schemaVersion": 1, "claims": [], "searchPlan": null, "sources": [], "evidence": [], "claimEvidenceMatrix": [], "conflicts": [], "uploadedMaterials": [], "updatedAt": "2026-08-13T00:00:00.000Z" },
+    "executionWorkspace": { "schemaVersion": 1, "tasks": [], "sources": [], "outreachAttempts": [], "sessions": [], "questions": [], "notes": [], "transcripts": [], "quotes": [], "leads": [], "evidenceGaps": [], "outlines": [], "assignmentChecks": [], "updatedAt": "2026-08-13T00:00:00.000Z" },
+    "createdAt": "2026-08-13T00:00:00.000Z", "updatedAt": "2026-08-13T00:00:00.000Z"
+  }],
+  "fixtureMetadata": { "synthetic": true, "notice": "本示例为虚构教学数据。不对应真实人物、真实学校或真实事件。" }
+}

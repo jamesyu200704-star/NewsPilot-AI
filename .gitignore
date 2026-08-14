@@ -2,12 +2,16 @@ node_modules/
 dist/
 dist-server/
 coverage/
+.vite/
+playwright-report/
+test-results/
 
 .env
 .env.*
 !.env.example
 models/
 .ollama/
+searxng/settings.yml
 
 *.log
 npm-debug.log*
@@ -22,3 +26,5 @@ Thumbs.db
 output/
 演示视频/
 .vercel/
+research/results/
+qa/results/private/

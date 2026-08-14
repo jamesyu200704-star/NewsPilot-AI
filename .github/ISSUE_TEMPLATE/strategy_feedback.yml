@@ -1,0 +1,36 @@
+name: 新闻策略反馈
+description: 反馈报道策略、信源、问题和证据方法是否专业适用
+title: "[策略] "
+labels: [journalism-strategy]
+body:
+  - type: dropdown
+    id: reporting_type
+    attributes:
+      label: 报道类型
+      options: [人物特稿, 校园调查, 政策观察, 消息, 解释性报道, 其他]
+    validations: { required: true }
+  - type: input
+    id: target_user
+    attributes: { label: 目标用户, placeholder: 例如：第一次做校园调查的大二学生 }
+    validations: { required: true }
+  - type: textarea
+    id: current_strategy
+    attributes: { label: 当前推荐策略 }
+    validations: { required: true }
+  - type: textarea
+    id: mismatch
+    attributes: { label: 为什么不合适 }
+    validations: { required: true }
+  - type: textarea
+    id: proposal
+    attributes: { label: 建议修改 }
+  - type: textarea
+    id: basis
+    attributes: { label: 新闻专业依据、来源或公开案例 }
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: 提交确认
+      options:
+        - label: 未上传真实受访者隐私、未公开采访、课程私人材料或联系方式。
+          required: true

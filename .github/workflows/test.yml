@@ -1,4 +1,4 @@
-name: Build
+name: Test
 
 on:
   push:
@@ -10,14 +10,10 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: build-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     env:
       VITE_GENERATION_MODE: mock
       VITE_EVIDENCE_MODE: mock
@@ -27,12 +23,10 @@ jobs:
       SEARCH_MODE: mock
       TRANSCRIPTION_PROVIDER: manual
     steps:
-      - name: 检出代码
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-      - name: 配置 Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: 22
           cache: npm
@@ -42,3 +36,11 @@ jobs:
         run: npm test
       - name: 构建生产版本
         run: npm run build
+      - name: 校园报道评测
+        run: npm run eval:campus
+      - name: P1 证据评测
+        run: npm run eval:p1
+      - name: P2 执行评测
+        run: npm run eval:p2
+      - name: P3 验证评测
+        run: npm run eval:p3

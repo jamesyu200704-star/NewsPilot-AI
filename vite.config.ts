@@ -8,6 +8,7 @@ export default defineConfig(({ mode }) => {
     base: './',
     plugins: [react()],
     server: {
+      host: '127.0.0.1',
       proxy: {
         '/api': {
           target: env.VITE_API_PROXY_TARGET || 'http://127.0.0.1:8787',

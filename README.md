@@ -1,491 +1,464 @@
 # NewsPilot AI
 
 [![Build](https://github.com/jamesyu200704-star/NewsPilot-AI/actions/workflows/build.yml/badge.svg)](https://github.com/jamesyu200704-star/NewsPilot-AI/actions/workflows/build.yml)
-[![Release](https://img.shields.io/github/v/release/jamesyu200704-star/NewsPilot-AI)](https://github.com/jamesyu200704-star/NewsPilot-AI/releases/latest)
 [![License](https://img.shields.io/github/license/jamesyu200704-star/NewsPilot-AI)](LICENSE)
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Vercel-000000?logo=vercel)](https://newspilot-ai-ashy.vercel.app)
 
-NewsPilot AI 是一个面向新闻学生、校园媒体和初级记者的 AI 新闻策划 Agent。它把新闻价值判断、选题策略、采访方法和事实核查流程转化为可解释的数字化新闻工作流。
+**把一个宽泛选题，转成学生记者在截止期内真正能完成的报道计划。**
 
-AI-assisted news topic planning and interview preparation tool for journalism students.
+NewsPilot 是面向新闻传播专业学生与校园媒体的报道工作台。它帮助用户将模糊线索转化为可采访、可核实、可执行的报道方案。它不替用户“写一篇看起来像新闻的文章”，而是把课程要求、新闻价值、选题策略、信源地图、采访问题与事实核查组织成一份可执行工作单。
 
-当前版本默认使用浏览器本地 Demo，不需要后端或 API Key；Demo 仍会执行知识库检索与确定性三 Agent 流程，但不会伪装成实时网络搜索。需要真实模型与实时证据时，可通过后端启用 Qwen/Ollama/OpenAI 和 Brave Search。
+AI-assisted reporting workflow for journalism students: from assignment brief to angle, sources, interview questions and verification plan.
 
-## Live Demo
+[打开在线演示](https://newspilot-ai-ashy.vercel.app)
 
-[打开 NewsPilot AI 在线演示](https://newspilot-ai-ashy.vercel.app)
+## 当前发布与验证状态
 
-线上版本运行在 Vercel，固定使用浏览器本地 Demo：包含方法论、知识库 RAG 和三 Agent 审核演示，不需要 API Key，也不会把用户输入发送到外部服务；实时 Search 与真实 LLM 需要运行后端。
-生产构建在 <code>VITE_GENERATION_MODE=mock</code> 时不会请求不存在的
-<code>/api/health</code>；只有显式配置为 <code>local-ai</code> 才会探测生成后端。
+推荐版本：`v1.1.0-beta.1`。当前版本仍处于 Beta 阶段，尚未完成充分的真实用户验证。
 
-## 项目简介
+当前尚未完成真实用户验证。
+以下内容为测试框架或模拟演示数据。
 
-NewsPilot AI 聚焦新闻报道的前期准备，而不是替代采访、调查或事实核验。用户输入线索后，系统依次完成主题分析、六维新闻价值评估、规则匹配、知识库与公开来源检索、策划生成、事实/风险审核和编辑终审，最后形成可追溯的新闻策划报告。
+- 真实参与者：0；真实研究场次：0；真实匿名对照评测：0。
+- 已有验证：自动化测试、P0/P1/P2/P3 合成评测、生产构建与开发者 QA。
+- 尚不能证明：真实学生十分钟内完成核心任务、比通用模型减少修改成本、真实设备与课程环境下的可用性。
+- 仓库历史中已经存在 `v1.0.0`，但它不代表真实用户验证已完成；本次发布采用后续 Beta 版本号，完成至少一轮真实测试并处理高优先级问题后再复核稳定版资格。
 
-生成结果仅是策划建议。正式报道前仍需核实人物身份、制度原文、数据口径、回应权、隐私风险与素材授权。
+研究与人工验收入口见 [`research/`](research/README.md) 和 [`qa/`](qa/README.md)。
 
-## 产品背景
+## P2：采访执行、报道结构与提交闭环
 
-新闻初学者在选题阶段常遇到三个问题：
+当前 Beta 在 P1 可追溯证据链上继续提供完整执行层：
 
-1. **主题过于宽泛**：知道想报道什么，却难以拆成可落地的新闻角度。
-2. **采访准备分散**：采访对象、问题、事实核查任务与风险提醒缺少统一结构。
-3. **AI 内容边界模糊**：生成文本容易被误当成已核验事实，需要明确来源模式和核验责任。
+- 截止期倒排任务、依赖、阻塞、今日三件事和完成条件；
+- 采访对象、替代信源、人工联系记录、预约、同意与归因边界；
+- 每个问题绑定信源、主张、证据缺口、目的与预期证据；
+- 专注采访模式、七类快速笔记、采访后复盘和完成门槛；
+- 人工 TXT/Markdown 转写与可选本地 Whisper，未复核片段不能作为准确引语；
+- 采访陈述只生成候选主张、候选引语和线索，须人工确认并独立核验；
+- 十二类证据缺口、六种证据支撑报道骨架和不隐藏阻断项的作业检查；
+- 九类脱敏导出，包含中文 DOCX、CSV、Markdown、JSON 和规定六文件 ZIP。
 
-NewsPilot AI 将准备过程组织为：
-
-**新闻线索 → 主题分析 → 新闻价值评估 → Rules Engine → Search + RAG → 新闻策划 Agent → 事实核查/风险审核 Agent → 新闻编辑 Agent → 最终策划报告**
-
-## 核心功能
-
-- 填写新闻主题、报道类型、目标受众、报道范围和补充背景。
-- 对时效性、重要性、接近性、冲突性、人物性和趣味性进行六维评分，并给出可解释理由与综合置信度。
-- Rules Engine 根据校园教育、政策治理、技术问责和消费市场等议题自动补齐采访角色、资料来源、核查重点与风险。
-- Prompt Engine 要求 AI 按六步新闻编辑流程工作，禁止编造事实、数据和受访者。
-- 内置新闻价值理论、优秀报道结构和采访策略知识库，不存储完整新闻正文。
-- 自动生成主题、政策、公开数据和近期报道查询；可选 Brave Search 为 Prompt 提供可追溯实时证据。
-- 新闻策划、事实核查/风险审核、新闻编辑三个 Agent 独立执行，AI 模式会进行三次结构化模型调用。
-- 每项核查发现包含严重程度、支持状态、必须行动和证据 ID；搜索摘要最多只能视为部分支持。
-- 生成“人物、制度、数据趋势”三个固定报道角度。
-- 输出完整新闻策划报告，包含主题分析、核心矛盾、规则轨迹、报道角度、资料需求、事实核查、风险和下一步行动。
-- 支持复制单个角度、复制完整方案和导出 UTF-8 Markdown 文件。
-- 默认使用浏览器本地 Mock，不上传输入，也不需要 API Key。
-- 页面会通过健康检查识别项目后端配置的 Qwen、Ollama、OpenAI 或 Mock；只有后端报告已配置 AI Provider 时才允许选择对应模式。
-- Express Generator Service 通过 Provider 层支持 Mock、Qwen、Ollama 与 OpenAI Provider。
-- Ollama 默认连接本机 Qwen，并使用 JSON Schema Structured Outputs；也可显式配置其他可信 Ollama 地址。
-- Ollama/OpenAI 失败时服务端降级到 MockProvider；API 不可用时前端继续降级到浏览器本地 Mock。
-- 通过结果中的 <code>mode</code>、<code>retrievalContext</code> 和 <code>agentReview.trace</code> 明确区分内容、证据与 Agent 的来源。
-
-## 界面预览
-
-### 主题输入
-
-![NewsPilot AI 主题输入首页](docs/homepage.png)
-
-### 结构化策划结果
-
-![NewsPilot AI Search、RAG 与可追溯证据结果页](docs/result.png)
-
-### 复制与 Markdown 导出
-
-![NewsPilot AI 复制和导出功能](docs/export.png)
-
-截图拍摄、更新和隐私检查方式见 [截图指南](docs/SCREENSHOT_GUIDE.md)。
-
-## 技术架构
-
-核心链路：
-
-**User → Deterministic Methodology → Search + RAG → Planning Agent → Fact-check/Risk Agent → Editor Agent → Validated Report**
-
-~~~mermaid
+```mermaid
 flowchart LR
-    U["User"] --> F["React Frontend"]
-    F --> E["Express API"]
-    E --> G["Generation Service / News Workflow"]
-    G --> T["Topic Analyzer"]
-    T --> N["News Value Engine"]
-    N --> RE["Rules Engine"]
-    RE --> S["Search + Knowledge RAG"]
-    S --> PE["Prompt Engine"]
-    PE --> P1["Planning Agent"]
-    P1 --> P["Provider Layer"]
-    P --> M["Mock Provider"]
-    P --> O["Ollama Provider"]
-    P --> QP["Qwen Provider"]
-    P --> A["OpenAI Provider"]
-    M --> D["Structured Draft"]
-    O --> Q["Configured Ollama / Qwen"]
-    QP --> Q
-    Q --> V["JSON Schema + Ajv Validation"]
-    A --> V["JSON Schema + Ajv Validation"]
-    V --> D
-    O -. "失败或非法结构" .-> M
-    QP -. "失败或非法结构" .-> M
-    A -. "失败、超时或非法结构" .-> M
-    D --> FC["Fact-check + Risk Agent"]
-    FC --> ED["Editor Agent"]
-    ED --> R["Ajv Validation + Final Report"]
-    R --> F
-~~~
+  A["任务与截止期"] --> T["倒排任务"]
+  T --> S["信源与人工联系"]
+  S --> I["提纲 / 同意 / 采访"]
+  I --> N["笔记与转写复核"]
+  N --> E["证据候选与缺口"]
+  E --> O["证据支撑提纲"]
+  O --> C["作业阻断检查"]
+  C --> X["脱敏提交包"]
+```
 
-实际运行包含四种 Provider 路径：
+## P1：从策划到可追溯证据链
 
-- **浏览器 Demo**：执行共享新闻方法论、内置知识库 RAG 和确定性三 Agent，不上传输入、不实时联网。
-- **QwenProvider**：通过本机 Ollama 对策划、核查、终审分别调用 Qwen，页面明确显示 Qwen Agent。
-- **Ollama AI（默认本机）**：React 前端调用 <code>POST /api/generate</code>，Express API 经 <code>GeneratorService</code> 调用配置的 Ollama / Qwen；默认地址为本机回环地址。
-- **OpenAI**：服务端可选择 OpenAIProvider；页面会明确显示云端 Provider 和数据去向，不会误标为本地处理。
+P1 在 V0.2 学生报道流程上增加了六项核心能力：
 
-共享的 <code>BriefInput</code>、<code>PlanningContext</code>、<code>RetrievalContext</code>、<code>AgentReview</code>、<code>GenerationResult</code> 和 JSON Schema 位于 <code>shared/generation.ts</code>。确定性评分与规则不交给模型，检索结果作为不可信数据注入，三个 Agent 的输出逐层校验后才合并为最终响应。
+- Manual / Mock / SearXNG 三种 Search Provider；搜索失败回退手动来源，不伪造结果。
+- 原始政策、官方数据和正式文件优先的可编辑检索计划，每条检索绑定 Claim ID 与用途。
+- `Claim → EvidenceItem → SourceRecord` 的 ID 级追溯，事实片段保留页码、段落或小节定位。
+- URL 规范化、内容哈希、近重复/转载识别和独立来源组，转载不重复计数。
+- 确定性 `verified / partially_verified / unverified / conflicted` 规则与七类冲突展示。
+- TXT、Markdown、PDF 文本层、DOCX、CSV、JSON 浏览器本地解析和证据台账导入。
 
-### 技术栈
+```mermaid
+flowchart LR
+  B["ReportingBrief"] --> C["拆分待验证主张"]
+  C --> Q["可编辑检索计划"]
+  Q --> S["Manual / Mock / SearXNG"]
+  S --> F["安全抓取与正文提取"]
+  F --> D["分类 / 去重 / 独立性"]
+  D --> E["证据片段绑定"]
+  E --> V["确定性交叉核验"]
+  V --> R["带 Evidence ID 的策划案"]
+```
 
-- React 19、Vite 7、TypeScript 5（严格模式）
-- Node.js、Express 5
-- Ajv JSON Schema 校验
-- Ollama REST API、Qwen 本地推理与 Structured Outputs
-- OpenAI Responses API Structured Outputs
-- Brave Search API（可选实时检索）
-- 原生 CSS
+搜索结果只是线索，不能直接作为证据。社交媒体不能单独证明关键事实；来源冲突不会自动裁决；NewsPilot 不替代记者采访，也不生成虚构引语。
 
-## 当前版本
+## 产品边界
 
-### V1.0 News Agent Release
+当前版本优先解决新闻学生最常见的前置任务：
 
-- 默认模式：浏览器本地 Mock。
-- 可选模式：Express Generator Service + Ollama/Qwen（默认本机）或 OpenAI Provider。
-- Provider 状态：页面通过 <code>GET /api/health</code> 识别项目后端配置；未连接或仅配置 Mock 时禁用 AI 选项并安全回到 Demo，上游调用失败时仍会自动降级。
-- 当前包版本：<code>1.0.0</code>。
-- 已实现：V0.2 方法论与规则、V0.3 Knowledge Base/Search/RAG、V0.4 多 Agent 审核和 V1.0 完整新闻工作流。
-- Demo 会明确标记“本地知识库”；只有 <code>SEARCH_MODE=brave</code> 且服务端配置密钥时才标记为实时检索。
-- 当前不包含账号、权限、数据库、历史记录或生产级 API 网关。
+- 我到底要交什么？
+- 这个题值不值得继续做？
+- 怎样把宽泛主题缩成新闻问题？
+- 我该采访谁，问什么，拿到什么证据？
+- 哪些信息已核实，哪些只是线索或工作假设？
+- 接下来 24—48 小时应该先做什么？
+
+当前**不会**实现账号、云端历史、多人协作、商业搜索 API、向量数据库、自动成稿、OCR、自动生成引语或复杂多 Agent 编排。没有真实采访时，系统不会声称采访已经完成，也不会生成“受访者表示”式虚假引语。
+
+### NewsPilot 不是什么
+
+- 不是自动写稿工具，也不替用户完成真实采访；
+- 不生成虚构采访或虚构直接引语；
+- 不保证搜索结果自动真实，不把搜索线索直接当证据；
+- 不自动判断受访者是否说谎；
+- 不替代教师、编辑或事实核查员；
+- 不因模型输出流畅就把工作假设升级为事实。
+
+采访与隐私边界：
+
+- NewsPilot 不替代真实采访，也不生成虚构采访内容；
+- 不自动发送采访邀约，不自动确定事实；
+- 不自动生成可直接发表的完整稿件；
+- 逐字稿和引语必须人工复核；
+- 用户需要遵守所在地区、学校和采访场景的录音与隐私要求。
+
+## 两种工作模式
+
+### 课程作业模式（默认）
+
+输入课程名称、作业类型、截止日期、目标字数、最低采访人数、教师要求和提交项。输出直接服务于课程采访策划案与提交前自查。
+
+### 校园媒体模式
+
+输入发布平台、发布时间、目标读者、校园范围和当前新闻钩子。系统优先考虑时效窗口、校园相关性、信源可达性和短周期执行。
+
+两种模式共享同一套新闻方法，但任务优先级不同。
+
+## 四步学生报道工作台
+
+1. **填写任务**：用 `ReportingBrief` 描述课程或刊发约束。
+2. **拆选题**：把主题转换为新闻问题，区分已知 / 假设 / 未知，给出 `GO / REVISE / HOLD / DROP` 判断并比较候选角度。
+3. **做采访**：生成信源地图与八层采访问题阶梯，低可达信源同时给出替代方案。
+4. **核查提交**：进入 P2 九视图执行工作台，完成任务、信源、真实采访记录、证据缺口、报道结构、自查和脱敏导出。
+
+快速模式是独立的决策摘要，除 Verdict、推荐角度、采访对象与立即行动外，只追加前三个关键证据缺口、三类优先来源和冲突提示。完整模式第四步提供“概览 / 任务 / 采访对象 / 采访提纲 / 采访记录 / 证据 / 报道结构 / 作业自查 / 导出”九个独立视图；P1 主张与证据工作台保留在“证据”页。
+
+## P0 可用性能力
+
+### 粘贴并确认课程要求
+
+课程模式可粘贴纯文本作业要求。系统确定性提取作业类型、截止时间、字数、采访人数、信源类型、人物故事、采访提纲、采访总结、格式和其他硬性约束，并逐项显示原文依据、置信度和是否需要确认。用户可修改结果；只有主动勾选确认的项目会写入任务，未确认推测不会成为硬性要求。
+
+### 本地项目（无需账号）
+
+页面会在浏览器本地创建项目并自动保存，支持项目列表、重命名、复制、删除、最近修改时间以及版本化 JSON 导入导出。导入时会校验格式、数据版本与关键字段，损坏文件不会覆盖当前项目。
+
+> 项目数据只保存在当前设备的当前浏览器中。清除浏览器数据、更换设备或无痕窗口都可能导致数据不可用，请定期导出 JSON 备份。
+
+### 人工匿名对照评测
+
+开发/研究模式中的折叠工具可比较 NewsPilot、通用聊天模型和学生自行策划结果。后两份材料由测试人员手动粘贴，不调用新的收费 API；三份内容随机匿名为方案 A / B / C，按 13 个带 Rubric 的维度人工评分。评分必须先提交锁定，之后才允许导出匿名结果和揭示来源。
+
+## 新闻方法与确定性规则
+
+NewsPilot 不采用“主题 → LLM → 漂亮文本”的单跳结构。V0.2 的核心链路是：
+
+```mermaid
+flowchart LR
+  B["ReportingBrief"] --> F["新闻问题与假设边界"]
+  F --> V["六维新闻价值 + Verdict"]
+  V --> S["十类报道策略匹配"]
+  S --> A["七维候选角度评分"]
+  A --> M["SourceMap"]
+  M --> Q["InterviewQuestion Ladder"]
+  Q --> E["Evidence Ledger"]
+  E --> C["VerificationRules"]
+  C --> P["StudentReportingPlan"]
+```
+
+程序层确定性执行的内容包括：
+
+- 时效性、重要性、接近性、冲突性、人物性、趣味性六维新闻价值。
+- 新闻价值、读者相关性、信源可达性、证据可获得性、时间可行性、场景潜力、伦理安全七维角度评分。
+- 十类报道策略：人物特稿、校园现象调查、政策落地观察、热点本地化、数据调查、服务性报道、变化型报道、冲突型报道、场景切入型报道、群像报道。
+- 原始来源、双独立来源、社交媒体线索和来源冲突的基础交叉验证规则。
+
+## AI 与资料层如何参与
+
+普通用户首页不需要理解 Provider。默认浏览器 Mock 可完整体验学生报道工作流，输入不会离开浏览器。
+
+开发者可在页面底部展开“开发者设置”，启用项目已有的 Qwen/Ollama/OpenAI Provider。模型可以辅助拆分主张、建议检索词和归纳短摘要，但来源真实性、独立性、Evidence ID 和最终核实状态仍由可验证代码与用户确认控制。
+
+P1 支持 Manual、明确标记的 Mock 与可选自托管 SearXNG。旧版 Brave Search 保留用于兼容旧工作流，不进入 P1 证据核实链路。SearXNG 返回的摘要仍为 `metadata_only / lead_only`；必须成功取得原始页面并由用户确认短片段，才进入核验矩阵。
+
+## 结果数据模型
+
+- `ReportingBrief`：任务、截止期、字数、信源、材料、资源和伦理限制。
+- `TopicFrame`：原始主题、新闻问题、工作假设、已知、未知和核实需求。
+- `Verdict`：`GO / REVISE / HOLD / DROP`、理由、最大风险、收窄建议与最小可行版本。
+- `CandidateAngle`：策略、核心矛盾、七维评分、所需证据和可行性说明。
+- `SourceMapItem`：角色、信息价值、可达性、偏差、替代信源和核实目标。
+- `InterviewPlan`：破冰、事实、经历、原因、冲突、验证、追问、收尾八层问题。
+- `Claim`：事实、观点、假设、指控、预测或统计主张，以及重要性、范围和缺口。
+- `SourceRecord`：来源类型、等级、规范 URL、转载关系、独立来源组和分类历史。
+- `EvidenceItem`：可定位短片段、与 Claim 的支持/反驳/背景关系和直接性。
+- `ClaimEvidenceMatrixRow`：独立来源数、原始来源数、核实状态、规则理由与剩余工作。
+- `StudentReportingPlan`：完整学生报道方案。
 
 ## 快速开始
 
-环境要求：Node.js 20.19+ 或 22.12+，以及 npm。
+需要 Node.js 20.19+（推荐 Node.js 22）和 npm。
 
-### 1. 安装依赖
-
-~~~bash
+```bash
 npm install
-~~~
-
-### 2. 准备本地环境文件
-
-优先复制为 <code>.env.local</code>；也可以复制为 <code>.env</code>。服务端按 <code>.env.local</code>、<code>.env</code> 的顺序读取第一个存在的文件。
-
-macOS、Linux 或 Git Bash：
-
-~~~bash
-cp .env.example .env.local
-~~~
-
-Windows PowerShell：
-
-~~~powershell
-Copy-Item .env.example .env.local
-~~~
-
-### 3. 启动默认 Mock 模式
-
-~~~bash
 npm run dev
-~~~
+```
 
-该命令会同时启动 Express API 与 Vite 前端。访问终端显示的前端地址，通常为 <http://localhost:5173>。默认 <code>VITE_GENERATION_MODE=mock</code>，页面初始选择 Demo 模式，输入不会离开浏览器。
+浏览器访问 Vite 输出的地址，通常为 `http://localhost:5173`。默认 `VITE_GENERATION_MODE=mock`，无需 API Key。
 
-### 4. 构建
+生产构建与测试：
 
-~~~bash
+```bash
+npm test
 npm run build
-~~~
+npm run eval:campus
+npm run eval:p1
+npm run eval:p2
+npm run eval:p3
+```
 
-该命令构建前端 <code>dist/</code> 与服务端 <code>dist-server/</code>。可用 <code>npm run preview</code> 预览前端构建结果。
+`eval:campus` 运行 20 个校园策划案例。`eval:p1` 运行 30 个合成证据案例，最重要门槛是关键事实 `False Verification Rate = 0`。`eval:p2` 运行 20 个合成执行项目，覆盖十项执行指标。`eval:p3` 检查研究数据隔离、匿名性、盲评完整性、事件隐私、问题优先级、发布判断、示例安全和功能冻结。评测不访问真实网络，也不代表真实事实、真实用户效果或新闻质量。
 
-## Ollama AI Mode（默认本机）
+## 搜索模式与本地完整模式
 
-默认配置不需要付费 API：新闻主题会发送到本机 Express 服务和 <code>http://localhost:11434</code> 的 Ollama。若修改 <code>OLLAMA_BASE_URL</code>，输入会发送到你配置的地址；请确认该服务可信、连接受到保护，并相应调整隐私判断。
+### Vercel Demo
 
-### 1. 安装 Ollama
+支持浏览器本地项目、作业解析、Mock 策划、手动证据、手动采访记录、手动逐字稿、大纲与导出。公开 Demo 的 `VITE_RESEARCH_MODE=false`，不运行研究记录、Express、SearXNG、Local Whisper 或服务端模型。
 
-从 [Ollama 官网](https://ollama.com) 下载并安装适合当前系统的版本。
+### 本地完整模式
 
-### 2. 下载默认 Qwen 模型
+纯前端 Demo 使用 `VITE_EVIDENCE_MODE=mock`：模拟卡明确标识，仍可手动粘贴来源、上传本地材料和维护证据台账。
 
-~~~bash
+本地完整模式可额外启用 Ollama + Qwen、SearXNG、Local Whisper 和仅本机研究模式：
+
+```powershell
+Copy-Item .env.example .env.local
+```
+
+```dotenv
+VITE_EVIDENCE_MODE=live
+VITE_RESEARCH_MODE=false
+SEARCH_PROVIDER=searxng
+SEARXNG_BASE_URL=http://localhost:8080
+```
+
+```bash
+pwsh -File scripts/初始化SearXNG配置.ps1
+docker compose -f docker-compose.search.yml up -d
+npm run dev
+```
+
+可选本地转写（公开部署保持 `manual`）：
+
+```dotenv
+TRANSCRIPTION_PROVIDER=local_whisper
+LOCAL_WHISPER_BASE_URL=http://localhost:9000
+TRANSCRIPTION_MAX_FILE_MB=100
+```
+
+本地 Whisper 只允许回环地址；音频不会写入 NewsPilot 项目或上传云端。服务不可用时改用人工粘贴，不丢失已有记录。
+
+首次使用必须先运行初始化脚本：它会从 `searxng/settings.yml.example` 创建被 Git 忽略的 `searxng/settings.yml`，并写入本机随机 secret，且不会在终端显示 secret。Compose 只把端口发布到 `127.0.0.1`；示例占位值禁止用于公开部署。详细说明见 [搜索架构](docs/SEARCH_ARCHITECTURE.md) 与 [SearXNG 配置](docs/SEARCH_SETUP.md)。
+
+## 可选本地 Qwen / Ollama
+
+本地模型不是普通用户使用 V0.2 的前提。需要验证 Provider 时：
+
+```bash
 ollama pull qwen2.5:1.5b
-~~~
+```
 
-模型名称不写死在代码中。需要使用其他本地模型时，先执行 <code>ollama pull &lt;模型名&gt;</code>，再修改 <code>OLLAMA_MODEL</code>。
+复制环境示例：
 
-### 3. 启用 QwenProvider
+```powershell
+Copy-Item .env.example .env.local
+```
 
-复制 <code>.env.example</code> 为 <code>.env.local</code>，至少修改：
+修改 `.env.local`：
 
-~~~dotenv
+```dotenv
+VITE_GENERATION_MODE=local-ai
 GENERATION_MODE=qwen
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=qwen2.5:1.5b
-~~~
+```
 
-### 4. 启动 Ollama 和项目
+随后启动 Ollama 与项目：
 
-~~~bash
-# 终端 1
+```bash
 ollama serve
-
-# 终端 2
-npm install
 npm run dev
-~~~
+```
 
-打开页面后选择“Qwen Agent”并生成。Qwen 会依次执行策划、事实核查和编辑终审。若 Ollama 未启动、模型不存在、返回 JSON 非法或请求失败，应用会给出可操作提示并自动降级到 Demo；JSON 解析失败会先自动重试一次。
+如果模型未启动、输出结构非法或后端不可达，系统会明确提示并回到浏览器 Mock。若将 `OLLAMA_BASE_URL` 改为远程地址，输入会发送到该服务，请自行确认信任与隐私边界。
 
-### 支持哪些模型
+## 环境变量与密钥安全
 
-默认模型是已完成真实链路验证、对普通电脑更友好的 <code>qwen2.5:1.5b</code>。如果设备内存充足并希望获得更好的策划质量，可改用 <code>qwen3:8b</code>。也支持其他已安装、能够遵循所提供 JSON Schema 的 Ollama 聊天模型；只需修改 <code>OLLAMA_MODEL</code>，无需改代码。模型实际可用性取决于 Ollama 版本、模型能力和本机内存。
+`.env.example` 只包含空密钥与安全示例。真实配置放在未跟踪的 `.env.local` 或 `.env` 中。
 
-## 环境配置
-
-<code>.env.example</code> 只包含安全示例和空密钥。复制后按运行模式修改 <code>.env.local</code> 或 <code>.env</code>，不要提交这些本地文件。
-
-### 服务端 Mock API
-
-~~~dotenv
-GENERATION_MODE=mock
-~~~
-
-启动开发环境：
-
-~~~bash
-npm run dev
-~~~
-
-前端经 Vite 开发代理请求 <code>http://127.0.0.1:8787/api/generate</code>。该模式用于验证完整 API 链路，不需要 API Key。
-
-### 可选 OpenAI Provider
-
-~~~dotenv
-GENERATION_MODE=openai
-OPENAI_API_KEY=
-OPENAI_MODEL=gpt-5.6-terra
-~~~
-
-<code>OPENAI_API_KEY</code> 仅由服务端 <code>server/config.ts</code> 读取。不要创建 <code>VITE_OPENAI_API_KEY</code>，也不要给任何秘密加 <code>VITE_</code> 前缀；Vite 会把这类变量暴露给浏览器构建。
-
-### 可选实时 Search
-
-~~~dotenv
-SEARCH_MODE=brave
-BRAVE_SEARCH_API_KEY=
-BRAVE_SEARCH_TIMEOUT_MS=10000
-~~~
-
-Brave 密钥只由服务端读取。启用后，系统把自动生成的检索词发送到 Brave Search API；返回的标题、URL 和摘要仅作为待核验线索，不会被直接标记为事实。
-
-### 环境变量参考
-
-| 变量 | 默认值 | 读取位置 | 说明 |
+| 变量 | 默认值 | 位置 | 用途 |
 | --- | --- | --- | --- |
-| <code>VITE_GENERATION_MODE</code> | <code>mock</code> | 浏览器 | <code>mock</code> 在生产构建中不探测后端并使用 Demo；<code>local-ai</code> 会健康检查 AI 后端，可用后默认选中 AI，不可用时回到 Demo；兼容旧值 <code>api</code>。 |
-| <code>VITE_API_PROXY_TARGET</code> | <code>http://127.0.0.1:8787</code> | Vite 开发服务器 | 本地开发 API 代理地址，不得包含密钥。 |
-| <code>VITE_API_TIMEOUT_MS</code> | <code>120000</code> | 浏览器 | API 请求超时，默认覆盖本地模型首次加载时间；超时后降级到本地 Mock。 |
-| <code>GENERATION_MODE</code> | <code>mock</code> | 服务端 | <code>mock</code>、<code>qwen</code>、<code>ollama</code> 或 <code>openai</code>；其他值按 <code>mock</code> 处理。 |
-| <code>SERVER_HOST</code> | <code>127.0.0.1</code> | 服务端 | Generator Service 监听地址。 |
-| <code>SERVER_PORT</code> | <code>8787</code> | 服务端 | Generator Service 监听端口。 |
-| <code>OLLAMA_BASE_URL</code> | <code>http://localhost:11434</code> | 服务端 | 本机 Ollama REST API 地址。 |
-| <code>OLLAMA_MODEL</code> | <code>qwen2.5:1.5b</code> | 服务端 | 已验证的轻量默认模型；可按设备能力替换。 |
-| <code>OLLAMA_TIMEOUT_MS</code> | <code>90000</code> | 服务端 | 单次本地模型请求超时，单位毫秒。 |
-| <code>SEARCH_MODE</code> | <code>mock</code> | 服务端 | <code>mock</code> 只使用内置知识库；<code>brave</code> 启用实时 Search。 |
-| <code>BRAVE_SEARCH_API_KEY</code> | 未设置 | 服务端 | BraveSearchProvider 使用；不得进入浏览器或仓库。 |
-| <code>BRAVE_SEARCH_TIMEOUT_MS</code> | <code>10000</code> | 服务端 | 单次 Brave Search 请求超时。 |
-| <code>OPENAI_API_KEY</code> | 未设置 | 服务端 | 仅 OpenAIProvider 使用；缺失时服务端降级到 MockProvider。 |
-| <code>OPENAI_MODEL</code> | <code>gpt-5.6-terra</code> | 服务端 | Responses API 模型名称。 |
-| <code>OPENAI_TIMEOUT_MS</code> | <code>30000</code> | 服务端 | 单次 OpenAI 请求超时，单位毫秒。 |
+| `VITE_GENERATION_MODE` | `mock` | 浏览器 | `mock` 或 `local-ai`；不得包含秘密。 |
+| `VITE_EVIDENCE_MODE` | `mock` | 浏览器 | `mock` 或 `live`，不包含搜索地址或秘密。 |
+| `GENERATION_MODE` | `mock` | 服务端 | `mock`、`qwen`、`ollama`、`openai`。 |
+| `OLLAMA_BASE_URL` | `http://localhost:11434` | 服务端 | Ollama 地址。 |
+| `OLLAMA_MODEL` | `qwen2.5:1.5b` | 服务端 | 本地模型名称。 |
+| `OPENAI_API_KEY` | 空 | 服务端 | 可选 OpenAI Provider 密钥。 |
+| `OPENAI_MODEL` | 示例值 | 服务端 | OpenAI 模型名称。 |
+| `SEARCH_PROVIDER` | `manual` | 服务端 | `manual`、`mock` 或 `searxng`。 |
+| `SEARXNG_BASE_URL` | 本机 8080 | 服务端 | 自托管 SearXNG 地址，不返回浏览器。 |
+| `SEARCH_RESULT_LIMIT` | `10` | 服务端 | 单条检索最多结果数，上限 20。 |
+| `SEARCH_TIMEOUT_MS` | `10000` | 服务端 | 搜索与页面获取超时。 |
+| `SEARCH_RATE_LIMIT_PER_MINUTE` | `10` | 服务端 | 单进程证据接口基础限流。 |
+| `TRANSCRIPTION_PROVIDER` | `manual` | 服务端 | `manual` 或仅本机的 `local_whisper`。 |
+| `LOCAL_WHISPER_BASE_URL` | 本机 9000 | 服务端 | 仅允许回环地址的本地转写服务。 |
+| `TRANSCRIPTION_MAX_FILE_MB` | `100` | 服务端 | MP3/WAV/M4A/WebM 上限。 |
+| `SEARCH_MAX_CONCURRENT_FETCHES` | `3` | 服务端 | 单进程网页抓取并发上限，上限 10。 |
+| `VITE_UPLOAD_MAX_FILE_MB` | `10` | 浏览器公开配置 | 单文件默认限制，只能填写非敏感数字。 |
+| `VITE_UPLOAD_MAX_PROJECT_MB` | `50` | 浏览器公开配置 | 单项目材料默认限制，只能填写非敏感数字。 |
+| `VITE_RESEARCH_MODE` | `false` | 浏览器公开配置 | 仅本地研究工具；公开 Demo 必须关闭。 |
+| `UPLOAD_MAX_FILE_MB` | `10` | 服务端预留 | 未来受控上传接口的单文件限制。 |
+| `UPLOAD_MAX_PROJECT_MB` | `50` | 服务端预留 | 未来受控上传接口的单项目限制。 |
+| `SEARCH_MODE` | `mock` | 服务端 | 旧版兼容检索开关。 |
+| `BRAVE_SEARCH_API_KEY` | 空 | 服务端 | 旧版 Brave Provider 可选密钥。 |
 
-## Structured Outputs 与降级链路
-
-Qwen/OllamaProvider 调用 <code>POST /api/chat</code>，OpenAIProvider 使用 Responses API。每个 AI Provider 都按策划、事实核查、编辑终审执行三次独立 Structured Output 调用；主题分析、新闻价值评分和 Rules Engine 仍由程序确定性执行。
-
-服务端执行多层校验：
-
-1. <code>POST /api/generate</code> 的 <code>BriefInput</code> 必须满足输入 Schema；额外字段和超长内容会被拒绝。
-2. Search 结果只接受 HTTP/HTTPS 来源地址，并与内置知识库合并为最多 16 条可追溯证据。
-3. 策划、事实/风险审核、编辑终审分别通过独立 JSON Schema；三个角度必须依次为 <code>people</code>、<code>system</code>、<code>trend</code>。
-4. 合并后的 <code>GenerationResult</code> 必须包含六维评分、规则、检索证据、Agent 轨迹和完整策划清单，并再次通过服务端与浏览器校验。
-
-降级顺序：
-
-1. Ollama JSON 解析失败时自动重新请求一次。
-2. Qwen/Ollama/OpenAI 任一 Agent 调用失败、超时、拒绝、JSON 非法、结构非法、模型缺失或缺少配置时，<code>GeneratorService</code> 切换到完整 Mock 三 Agent 工作流。
-3. Brave Search 不可用时保留内置知识库并明确标记检索降级。
-4. 浏览器无法访问服务端、请求超时、收到非 2xx 或无效 <code>GenerationResult</code> 时，前端切换到浏览器本地 Demo。
-
-## API
-
-### <code>POST /api/generate</code>
-
-请求示例：
-
-~~~json
-{
-  "topic": "校园夜间照明",
-  "reportType": "深度报道",
-  "audience": "高校学生",
-  "scope": "校内",
-  "background": "关注安全、能耗与学生体验"
-}
-~~~
-
-成功时返回 <code>GenerationResult</code>。输入 JSON 或 Schema 不合法时返回 <code>400</code>；请求体超过 32 KiB 时返回 <code>413</code>；非 JSON Content-Type 返回 <code>415</code>；触发单进程请求窗口或并发上限时返回 <code>429</code>。响应包含 <code>Cache-Control: no-store</code>。
-
-### <code>GET /api/health</code>
-
-返回当前配置的主 Provider、降级 Provider 与 Search Provider 名称，不探测上游模型，也不返回密钥。
-
-## 构建与测试
-
-~~~bash
-# 前端与服务端生产构建
-npm run build
-
-# Schema、Provider、降级、客户端适配器和 HTTP API 测试
-npm test
-
-# 运行已构建的服务端
-npm run start:server
-
-# 预览前端构建
-npm run preview
-~~~
-
-## Deployment
-
-仓库已提供 [`vercel.json`](vercel.json)，并固定使用以下构建设置：
-
-- Framework：Vite
-- Install Command：`npm ci`
-- Build Command：`npm run build`
-- Output Directory：`dist`
-
-当前 GitHub 仓库已连接 Vercel；变更合并到 `main` 后会自动触发 Production 部署。Vercel 配置还会为所有静态响应添加 CSP、防嵌入、MIME 嗅探保护、Referrer Policy 与 Permissions Policy。
-
-使用 Vercel Dashboard 导入本仓库，或在项目根目录执行：
-
-~~~bash
-npm install -g vercel
-vercel
-~~~
-
-公开演示建议在 Vercel 的 Production 环境中设置：
-
-~~~dotenv
-VITE_GENERATION_MODE=mock
-~~~
-
-该变量不是秘密；它选择浏览器本地 Demo，仍会展示知识库与三 Agent 工作流，但不会实时联网或调用模型。不要在 Vercel 的前端环境中配置 `OPENAI_API_KEY`、`BRAVE_SEARCH_API_KEY`，也不要创建任何带 `VITE_` 前缀的秘密。真实 Provider 必须由独立受保护的服务端使用 Secret 调用。
+不要创建 `VITE_OPENAI_API_KEY`、`VITE_BRAVE_SEARCH_API_KEY` 或任何带 `VITE_` 前缀的秘密；Vite 会把这类变量打包到浏览器。
 
 ## 项目结构
 
-~~~text
+```text
 NewsPilot AI/
-├── .github/
-│   ├── ISSUE_TEMPLATE/           # Bug、建议与安全报告入口
-│   ├── workflows/build.yml       # 测试、审计与生产构建
-│   ├── dependabot.yml            # 每周非破坏性依赖更新
-│   └── PULL_REQUEST_TEMPLATE.md
-├── docs/                         # 截图与作品集文档
-├── knowledge/
-│   ├── 新闻价值理论.ts           # 六维新闻价值方法
-│   ├── 优秀报道案例.ts           # 报道结构摘要，不含完整新闻
-│   ├── 采访策略.ts               # 教育、政策、消费、技术采访规则
-│   └── 知识库.ts                 # 轻量 RAG 检索与排序
-├── prompts/
-│   ├── 新闻编辑提示词.ts         # 新闻策划 Agent
-│   ├── 事实核查提示词.ts         # 事实与风险审核 Agent
-│   └── 新闻编辑终审提示词.ts     # 新闻编辑 Agent
+├── evals/
+│   ├── 校园报道题库.ts           # 20 个案例与六维半自动评测
+│   ├── p1-evidence/              # 30 个证据链与对抗评测案例
+│   ├── p2-execution/             # 20 个采访执行与隐私硬门槛评测
+│   ├── p3-validation/            # 研究、盲评、隐私与发布判断
+│   └── 运行校园报道评估.ts
+├── searxng/settings.yml.example  # 可提交的 SearXNG 示例；实配文件被忽略
+├── scripts/初始化SearXNG配置.ps1 # 生成本机随机 secret
+├── strategy-library/
+│   └── 报道策略.ts               # 十类学生报道策略卡
 ├── rules/
-│   └── 新闻规则.ts               # 类型安全的确定性新闻规则
-├── server/
-│   ├── providers/                # Mock、Qwen、Ollama、OpenAI Provider
-│   ├── search/                   # Mock 与 Brave Search Provider
-│   ├── routes/                   # Express /api/generate 路由
-│   ├── services/                 # Agent 工作流、检索服务、Ollama 客户端与降级
-│   ├── tests/                    # Schema、Provider、API 与客户端适配测试
-│   ├── types/                    # 服务端共享类型出口
-│   ├── app.ts                    # Express 应用与请求边界
-│   ├── config.ts                 # 服务端环境配置
-│   └── index.ts                  # Node.js 服务入口
+│   ├── 新闻规则.ts               # 旧版主题规则，继续兼容 Provider
+│   └── 交叉验证规则.ts           # 基础 VerificationRules
 ├── shared/
-│   ├── generation.ts            # 共享类型与 JSON Schema
-│   ├── 新闻方法论.ts             # 主题分析与六维新闻价值评分
-│   ├── 新闻工作流.ts             # 方法论与 Provider 草案合并
-│   ├── 本地检索.ts               # 浏览器本地知识库上下文
-│   ├── mockAgents.ts            # 同构确定性三 Agent
-│   └── mockGeneration.ts        # 共享 Mock 内容生成
+│   ├── 学生报道模型.ts           # V0.2 领域类型
+│   ├── 学生报道工作流.ts         # ReportingBrief → StudentReportingPlan
+│   ├── 作业要求解析.ts           # 十类课程要求提取与确认门槛
+│   ├── 快速策划摘要.ts           # 七类快速决策信息
+│   ├── 人工盲评.ts               # 13 维匿名评审、评分后揭盲与导出
+│   ├── 产品验证.ts               # 研究、指标、问题、冻结与 Release Gate
+│   ├── 本地项目模型.ts           # 版本化项目格式与损坏校验
+│   ├── 证据领域模型.ts           # Claim / Source / Evidence / Matrix
+│   ├── 报道执行模型.ts           # Task / Source / Session / Quote / Gap / Outline
+│   ├── 执行计划器.ts             # 截止期倒排、依赖与阻塞
+│   ├── 采访证据处理.ts           # 候选材料与人工纳入门槛
+│   ├── 报道提交检查.ts           # 提纲支撑与作业阻断检查
+│   ├── 报道导出.ts               # DOCX / CSV / Markdown / ZIP
+│   ├── 来源去重.ts               # URL、近重复、转载和独立来源组
+│   ├── 核验规则.ts               # 保守的确定性交叉核验
+│   └── generation.ts             # 既有 Provider 共享契约
 ├── src/
-│   ├── components/               # React 界面组件
-│   ├── services/                 # 客户端生成模式与 API 适配器
-│   ├── utils/                    # Markdown、复制等工具
-│   ├── App.tsx
-│   ├── main.tsx
-│   └── styles.css
-├── .editorconfig                 # 编辑器基础格式约定
+│   ├── components/
+│   │   ├── 报道任务表单.tsx
+│   │   ├── 作业要求解析器.tsx
+│   │   ├── 本地项目栏.tsx
+│   │   ├── 人工盲评工具.tsx
+│   │   ├── 工作流导航.tsx
+│   │   ├── 学生报道结果.tsx
+│   │   ├── 证据工作台.tsx
+│   │   ├── 报道执行工作台.tsx
+│   │   ├── 研究分析页.tsx         # 仅研究模式可见的本地分析
+│   │   ├── 执行工作台/            # P2 九个独立视图
+│   │   └── 开发者设置.tsx
+│   ├── services/本地项目仓库.ts
+│   ├── services/学生策划服务.ts
+│   └── utils/学生策划案导出.ts
+├── server/search/p1/              # Manual / Mock / SearXNG Provider
+├── server/sources/                # SSRF 防护抓取与正文提取
+├── server/transcription/          # 可选回环 Local Whisper Provider
+├── docs/                          # P1/P2 架构、安全、隐私与工作流文档
+├── qa/                            # P2 人工验收清单与可导入夹具
+├── research/                      # P3 招募、同意、协议与空模板
+├── examples/                      # 三套虚构、脱敏、可公开示例
+├── release/                       # Beta 说明、功能冻结与门槛状态
+├── 用户测试/                     # 旧版 P0 用户测试材料
 ├── .env.example
 ├── CONTRIBUTING.md
 ├── CHANGELOG.md
-├── SECURITY.md
-├── package.json
+├── LICENSE
 └── README.md
-~~~
+```
 
-## 部署边界
+## 测试与评测
 
-### Vercel / GitHub Pages：静态 Demo
+自动测试覆盖：
 
-- 使用 <code>VITE_GENERATION_MODE=mock</code> 构建，将 <code>dist/</code> 部署到静态托管平台。
-- 生产 Mock 构建不会请求 <code>/api/health</code>，静态托管控制台不会产生该接口的预期 404。
-- Vercel 或 GitHub Pages 只能托管当前前端静态产物，不能直接运行仓库中的常驻 Node.js HTTP 服务。
-- Vite 已使用相对资源基路径 <code>./</code>，可部署到 GitHub Pages 仓库子路径；自定义域名也可直接使用同一静态产物。
-- 静态 Demo 展示完整 V1.0 方法论、知识库和三 Agent 界面，但不会执行实时 Search 或真实 LLM 调用；输入不上传，适合作品集演示。
+- `ReportingBrief` 到新闻问题、假设边界与 Verdict 的转换。
+- 十类策略匹配与三候选角度排序。
+- 每类信源的八层问题阶梯，以及诱导性 / 一题多问标记。
+- 原始来源、双独立来源、社交线索和来源冲突规则。
+- AI / Search 结果只能作为未核实线索。
+- Markdown 导出的完整章节与注入转义。
+- Provider、Structured Output、降级链路、API 和健康检查等既有测试。
+- 20 个校园报道案例的六维回归评测。
+- 30 个 P1 合成证据案例的九项指标，False Verification Rate 强制为 0。
+- URL 规范化、近重复与转载、独立来源分组、来源分级、冲突和引用完整性。
+- SearXNG 成功/超时/失败、重定向、404/非 HTML/大响应与 SSRF 阻断。
+- 六种材料格式、DOCX 宏/压缩风险、扫描 PDF 边界和提示词注入隔离。
+- 快速模式七类信息边界、作业要求人工确认、本地项目生命周期与损坏导入校验。
+- 三类方案的匿名盲评包、13 维 Rubric、评分后揭盲和匿名 JSON/CSV 导出。
+- P2 截止期倒排、任务依赖、状态机、同意、问题绑定、引语追溯、缺口任务、提纲支撑、作业检查、脱敏和 v2→v3 迁移。
+- 人工转写、本地音频双重校验、DOCX 隐私过滤和六文件提交包完整性。
+- 20 个 P2 离线合成项目的十项指标及四项必须为零的硬错误。
+- P3 的真实/模拟数据隔离、匿名参与者、事件脱敏、问题分级、Release Gate、功能冻结和公开示例安全。
 
-### API 模式：独立 Node.js 服务
+自动测试与校园题库评测只检查代码结构、方法约束和安全边界，不等同于新闻专业教师对真实报道质量的人工评分，也不能证明学生任务完成效率已经提升。
 
-- 单独部署 <code>dist-server/server/index.js</code>，并让前端的同源 <code>/api</code> 通过反向代理或网关转发到该服务。
-- 当前服务默认监听 <code>127.0.0.1</code>，内置基础的单进程请求窗口和并发上限，但没有账号、鉴权、分布式配额或生产监控。
-- 公网部署仍必须在网关层增加 TLS、访问控制、按身份分布式限流、成本保护、日志脱敏和健康检查访问策略。
-- 真实密钥只放在服务端 Secret；不得进入前端环境变量、静态构建、日志或仓库。
+P3 研究材料位于 [`research/`](research/README.md)，旧版 P0 材料保留在 [`用户测试/`](用户测试/README.md)。当前尚未开展真实测试、没有参与者记录，也没有可报告的用户效果。目标是招募 8—12 名新闻传播专业学生，至少覆盖 2 名校园媒体成员、2 名无独立采访经验者和 2 名使用过通用 AI 工具者；覆盖人物特稿、校园调查、政策观察后再依据真实观察迭代。
 
-## 内容与隐私边界
+## 部署
 
-- 生成结果不是已完成的采访、调查或事实结论。
-- 本地 Demo 不发送用户输入；Qwen/Ollama 会把输入发送到项目后端和 <code>OLLAMA_BASE_URL</code> 指向的服务（默认均在本机）；OpenAI 模式会发送给 OpenAI API。
-- 启用 <code>SEARCH_MODE=brave</code> 后，自动生成的检索词会发送给 Brave Search API；不要在主题中填写无关个人信息或未公开材料。
-- 应用不持久化输入，OpenAI 请求设置 <code>store=false</code>；仍不要填写无关的电话、身份证号、学号或其他敏感个人信息。
-- 项目目前不提供账号、权限、数据库、多租户隔离或正式发布流程。
+仓库包含 `vercel.json`。静态 Vercel 演示建议使用：
 
-## Roadmap
+```dotenv
+VITE_GENERATION_MODE=mock
+VITE_EVIDENCE_MODE=mock
+VITE_RESEARCH_MODE=false
+```
 
-### 已完成
+Vercel 会执行 `npm ci` 与 `npm run build`，输出目录为 `dist`。静态部署可运行 Mock、手动来源、本地上传、人工转写、任务/采访记录、报道提纲、作业检查和浏览器端 DOCX/ZIP 导出；不会运行 Express、SearXNG、网页抓取或本地 Whisper。实时搜索、Qwen/Ollama/OpenAI 和本地 Whisper 需要单独运行受保护的本地/服务端组件。
 
-- [x] MVP 界面
-- [x] Mock 生成
-- [x] AI Provider 架构
-- [x] Markdown Export
-- [x] OpenAI Structured Outputs、Ajv 校验与双层降级
-- [x] Ollama / Qwen 本地推理、严格 JSON 与自动降级
-- [x] 服务端、客户端与导出安全测试
-- [x] GitHub Actions 测试与构建工作流
-- [x] V0.2 主题分析与六维新闻价值评分
-- [x] V0.2 Prompt Engine 与 Rules Engine
-- [x] V0.2 方法论驱动的新闻策划报告
-- [x] V0.3 新闻策略 Knowledge Base
-- [x] V0.3 Search + RAG 与 BraveSearchProvider
-- [x] V0.4 新闻策划、事实核查/风险审核、新闻编辑三 Agent
-- [x] V1.0 完整新闻 AI Agent、证据面板和审核报告
+GitHub Pages 也可托管 Mock 静态版，Vite `base: './'` 已兼容子路径资源；真实 Provider 不应直接暴露在公开静态站点。
 
-### 未来
+## 当前限制与后续方向
 
-- [ ] 账号、项目历史与多人协作
-- [ ] 生产级鉴权、分布式限流、成本预算和监控
-- [ ] 可插拔向量数据库与更大规模的授权案例库
-- [ ] 记者人工确认、证据归档和发布审批工作流
+- 当前 Verdict、策略匹配与问题模板是可解释的基础规则，不能代替教师或编辑判断。
+- 本地材料会读取可支持格式的文本；扫描 PDF 没有 OCR，复杂表格和版式可能丢失。
+- 没有自动采访、站内录音或完整报道写作；可选本地 Whisper 仍要求人工复核。
+- 公开 Demo 不提供实时搜索；完整模式需要用户自己运行或部署 SearXNG。
+- 没有账号、云历史、协作、数据库与向量检索。
+- 20 题评测主要验证工作流完整性与安全边界，真实新闻质量仍需人工评估。
+- 十类策略的执行与伦理元数据已补齐，但目前没有引入未经核验的教材、论文或案例引用；来源状态均为“待人工审核”。
+- 作业要求解析只处理用户粘贴的文本，不读取 PDF 或 Word；表达含糊时仍需人工判断。
+- 本地项目使用浏览器存储，不提供账号、云同步、跨设备恢复或多人协作。
+- 人工盲评工具只记录评分，不自动宣布“更优方案”；真实对照评测仍需招募测试者与独立评审。
+- 近重复与原始出处判断是轻量规则，无法替代编辑对真实采写独立性的人工判断。
+- 单进程限流、固定客户端头不是生产级鉴权；当前后端不能直接作为匿名公共搜索代理。
+- 完整限制见 [P2 当前限制](docs/P2_LIMITATIONS.md)。
 
-## 参与贡献与安全
+## P1 文档
 
-- 贡献流程见 [CONTRIBUTING.md](CONTRIBUTING.md)。
-- 安全问题报告方式见 [SECURITY.md](SECURITY.md)。
-- 版本记录见 [CHANGELOG.md](CHANGELOG.md)。
-- GitHub 已提供结构化 Issue 表单、Pull Request 检查清单和每周 Dependabot 小版本/补丁更新；主版本升级需单独评估。
+- [搜索架构](docs/SEARCH_ARCHITECTURE.md) · [配置](docs/SEARCH_SETUP.md) · [证据模型](docs/EVIDENCE_MODEL.md)
+- [来源等级](docs/SOURCE_RANKING.md) · [去重](docs/DEDUPLICATION.md) · [核验规则](docs/VERIFICATION_RULES.md)
+- [冲突处理](docs/CONFLICT_HANDLING.md) · [上传解析](docs/UPLOAD_AND_PARSING.md)
+- [搜索安全](docs/SEARCH_SECURITY.md) · [隐私说明](docs/PRIVACY.md)
 
-## 官方参考
+## P2 文档
 
-- [OpenAI Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
-- [OpenAI Models](https://developers.openai.com/api/docs/models)
-- [OpenAI API Key 安全最佳实践](https://help.openai.com/en/articles/5112595-best-practices-for-api-key)
-- [Brave Search API Authentication](https://api-dashboard.search.brave.com/documentation/guides/authentication)
+- [执行工作流](docs/EXECUTION_WORKFLOW.md) · [任务倒排](docs/TASK_PLANNING.md) · [采访对象与联系](docs/SOURCE_AND_OUTREACH.md)
+- [采访模式](docs/INTERVIEW_MODE.md) · [转写](docs/TRANSCRIPTION.md) · [引语政策](docs/QUOTE_POLICY.md)
+- [采访证据](docs/INTERVIEW_EVIDENCE.md) · [缺口关闭](docs/EVIDENCE_GAP_CLOSURE.md) · [报道提纲](docs/STORY_OUTLINE.md)
+- [作业检查](docs/ASSIGNMENT_CHECK.md) · [DOCX 导出](docs/DOCX_EXPORT.md) · [隐私脱敏](docs/PRIVACY_AND_REDACTION.md) · [当前限制](docs/P2_LIMITATIONS.md)
+
+## 开源协作
+
+提交 Issue 或 Pull Request 前请阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。安全问题见 [SECURITY.md](SECURITY.md)。重要变化记录在 [CHANGELOG.md](CHANGELOG.md)。
 
 ## License
 
-本项目采用 [MIT License](LICENSE)。
+[MIT License](LICENSE)

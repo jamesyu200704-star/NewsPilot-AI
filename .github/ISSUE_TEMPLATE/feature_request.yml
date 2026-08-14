@@ -7,7 +7,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        NewsPilot AI 当前聚焦新闻选题与采访策划。请优先描述用户问题，而不是直接指定大型技术方案。
+        P3 已进入功能冻结。请优先描述核心用户问题；新 Provider、新工作流、云端账号和非必要大型功能会延后评估。不要上传真实采访或个人材料。
   - type: textarea
     id: scenario
     attributes:
@@ -35,4 +35,6 @@ body:
         - label: 这项建议与新闻选题、采访策划或项目开源维护直接相关。
           required: true
         - label: 我已搜索现有 Issue，未发现相同建议。
+          required: true
+        - label: 我确认内容不包含真实受访者身份、联系方式、逐字稿或课程私人材料。
           required: true

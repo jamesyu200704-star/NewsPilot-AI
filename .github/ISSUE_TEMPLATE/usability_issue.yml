@@ -1,0 +1,38 @@
+name: 可用性问题
+description: 报告主流程理解、下一步、移动端或无障碍问题
+title: "[可用性] "
+labels: [usability]
+body:
+  - type: markdown
+    attributes:
+      value: 请只描述匿名行为，不上传真实作业、采访、联系方式或逐字稿。
+  - type: dropdown
+    id: user
+    attributes:
+      label: 用户类型
+      options: [新闻专业学生, 校园媒体成员, 教师或编辑, 开发者, 其他]
+    validations: { required: true }
+  - type: dropdown
+    id: step
+    attributes:
+      label: 出现步骤
+      options: [创建项目, 作业解析, 策划, 证据, 采访, 大纲, 作业检查, 导出, 移动端]
+    validations: { required: true }
+  - type: textarea
+    id: observation
+    attributes:
+      label: 观察到的行为
+      description: 用户做了什么、在哪里停顿或误解；不要推测动机。
+    validations: { required: true }
+  - type: textarea
+    id: impact
+    attributes:
+      label: 对任务完成的影响
+    validations: { required: true }
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: 隐私确认
+      options:
+        - label: 内容已匿名，不包含真实用户或受访者材料。
+          required: true

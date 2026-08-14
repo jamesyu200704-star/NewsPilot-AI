@@ -1,0 +1,12 @@
+{
+  "format": "newspilot-local-projects", "dataVersion": 3, "exportedAt": "2026-08-13T00:00:00.000Z",
+  "projects": [{
+    "dataVersion": 3, "id": "example-policy-observation", "name": "虚构示例：AI 作业政策观察",
+    "brief": { "mode": "course", "rawTopic": "虚构线索：学校是否出台统一的生成式 AI 作业管理规定", "assignmentType": "政策观察", "courseName": "新闻采访与写作", "deadline": "2026-08-16T23:59", "targetLength": 1600, "minimumInterviewees": 3, "geographicScope": "虚构校园", "targetAudience": "在校师生", "availableInterviewees": ["虚构执行者", "虚构受影响学生", "虚构任课教师"], "existingMaterials": ["日期待核验的虚构通知截图"], "reportingResources": ["1 名学生记者", "48 小时"], "ethicalConstraints": ["区分政策与执行", "不裁决冲突"], "requiresDifferentSourceTypes": true },
+    "plan": null, "selectedAngleId": "",
+    "evidenceWorkspace": { "schemaVersion": 1, "claims": [], "searchPlan": null, "sources": [], "evidence": [], "claimEvidenceMatrix": [], "conflicts": [], "uploadedMaterials": [], "updatedAt": "2026-08-13T00:00:00.000Z" },
+    "executionWorkspace": { "schemaVersion": 1, "tasks": [], "sources": [], "outreachAttempts": [], "sessions": [], "questions": [], "notes": [], "transcripts": [], "quotes": [], "leads": [], "evidenceGaps": [], "outlines": [], "assignmentChecks": [], "updatedAt": "2026-08-13T00:00:00.000Z" },
+    "createdAt": "2026-08-13T00:00:00.000Z", "updatedAt": "2026-08-13T00:00:00.000Z"
+  }],
+  "fixtureMetadata": { "synthetic": true, "notice": "本示例为虚构教学数据。不对应真实人物、真实学校或真实事件。" }
+}

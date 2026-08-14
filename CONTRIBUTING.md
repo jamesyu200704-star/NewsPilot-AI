@@ -64,6 +64,7 @@ npm run dev
 5. UI 改动应检查桌面端、窄屏布局、键盘焦点和减少动态效果。
 6. 配置或文档改动应同步更新 README、示例和安全边界说明。
 7. 提交前运行相关测试与构建。
+8. P3 处于功能冻结：只接受错误修复、核心可用性、安全、隐私、导出、文档、测试、无障碍和关键文案。
 
 PR 描述建议包含：
 
@@ -99,6 +100,12 @@ PR 描述建议包含：
 ~~~bash
 # Schema、Provider、降级、客户端适配器和 HTTP API 测试
 npm test
+
+# 20 个校园策划案例、30 个 P1 证据案例与 20 个 P2 执行案例
+npm run eval:campus
+npm run eval:p1
+npm run eval:p2
+npm run eval:p3
 
 # 前端与服务端生产构建
 npm run build

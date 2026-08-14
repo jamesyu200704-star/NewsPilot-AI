@@ -9,18 +9,35 @@ import { BraveSearchProvider } from './search/BraveSearchProvider.js';
 import { MockSearchProvider } from './search/MockSearchProvider.js';
 import { GeneratorService } from './services/generator.js';
 import { RetrievalService } from './services/检索服务.js';
+import { ManualSourceProvider } from './search/p1/ManualSourceProvider.js';
+import { MockSearchProvider as P1MockSearchProvider } from './search/p1/MockSearchProvider.js';
+import { SearXNGProvider } from './search/p1/SearXNGProvider.js';
+import { EvidenceSearchService } from './services/证据搜索服务.js';
+import { SourceFetcher } from './sources/SourceFetcher.js';
+import { LocalWhisperProvider } from './transcription/LocalWhisperProvider.js';
 
 loadLocalEnvironment();
 
 const config = readServerConfig();
 const mockProvider = new MockProvider();
-const searchProvider =
+const legacySearchProvider =
   config.searchProvider === 'brave'
     ? new BraveSearchProvider({
         apiKey: config.braveSearchApiKey,
         timeoutMs: config.braveSearchTimeoutMs,
       })
     : new MockSearchProvider();
+const manualSourceProvider = new ManualSourceProvider();
+const p1SearchProvider = config.searchProvider === 'searxng'
+  ? new SearXNGProvider({
+      baseUrl: config.searxngBaseUrl,
+      timeoutMs: config.searchTimeoutMs,
+      defaultLimit: config.searchResultLimit,
+      allowLocalBaseUrl: /^https?:\/\/(?:localhost|127\.0\.0\.1|\[::1\])(?::\d+)?/iu.test(config.searxngBaseUrl),
+    })
+  : config.searchProvider === 'mock'
+    ? new P1MockSearchProvider()
+    : manualSourceProvider;
 const createPrimaryProvider = (): GenerationProvider => {
   if (config.provider === 'ollama') {
     return new OllamaProvider({
@@ -53,9 +70,19 @@ const generatorService = new GeneratorService(
   createPrimaryProvider(),
   mockProvider,
   console,
-  new RetrievalService(searchProvider),
+  new RetrievalService(legacySearchProvider),
 );
-const server = createApiServer(generatorService);
+const transcriptionProvider = config.transcriptionProvider === 'local_whisper'
+  ? new LocalWhisperProvider(config.localWhisperBaseUrl)
+  : undefined;
+const server = createApiServer(generatorService, {
+  evidenceSearchService: new EvidenceSearchService(p1SearchProvider, manualSourceProvider),
+  sourceFetcher: config.searchProvider === 'searxng' ? new SourceFetcher({ timeoutMs: config.searchTimeoutMs }) : undefined,
+  evidenceMaxRequestsPerWindow: config.searchRateLimitPerMinute,
+  evidenceMaxConcurrentFetches: config.searchMaxConcurrentFetches,
+  transcriptionProvider,
+  transcriptionMaxFileMb: config.transcriptionMaxFileMb,
+});
 
 server.listen(config.port, config.host, () => {
   console.log(

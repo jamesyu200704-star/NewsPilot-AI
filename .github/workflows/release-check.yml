@@ -1,0 +1,49 @@
+name: Release Check
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  release-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      VITE_GENERATION_MODE: mock
+      VITE_EVIDENCE_MODE: mock
+      VITE_RESEARCH_MODE: 'false'
+      GENERATION_MODE: mock
+      SEARCH_PROVIDER: manual
+      SEARCH_MODE: mock
+      TRANSCRIPTION_PROVIDER: manual
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: 高危依赖审计
+        run: npm audit --audit-level=high
+      - name: 全量质量门禁
+        run: |
+          npm test
+          npm run build
+          npm run eval:campus
+          npm run eval:p1
+          npm run eval:p2
+          npm run eval:p3
+      - name: 发布包敏感文件检查
+        shell: bash
+        run: |
+          tracked_env="$(git ls-files | grep -E '(^|/)\.env($|\.)' | grep -vE '(^|/)\.env\.example$' || true)"
+          test -z "$tracked_env"
+          ! git ls-files | grep -E '(^|/)node_modules/'
+          ! git ls-files | grep -E 'research/(results|data|sessions)/'

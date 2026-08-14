@@ -1,38 +1,25 @@
 import { NewspaperClipping } from '@phosphor-icons/react';
-import type { ClientGenerationMode } from '../services/generator';
-import type { ProviderPresentation } from '../services/providerStatus';
+import type { ReportingMode } from '../types';
 
 interface HeaderProps {
-  generationMode?: ClientGenerationMode;
-  providerPresentation: ProviderPresentation;
+  reportingMode: ReportingMode;
 }
 
-export function Header({
-  generationMode = 'mock',
-  providerPresentation,
-}: HeaderProps) {
+export function Header({ reportingMode }: HeaderProps) {
   return (
-    <header className="app-header">
-      <div className="brand" aria-label="NewsPilot AI">
-        <span className="brand__mark" aria-hidden="true">
-          <NewspaperClipping weight="bold" />
+    <header className="np-header">
+      <a className="np-brand" href="#top" aria-label="返回 NewsPilot 首页">
+        <span className="np-brand__mark" aria-hidden="true">
+          <NewspaperClipping weight="fill" />
         </span>
-        <div className="brand__copy">
-          <div className="brand__name">
-            NewsPilot
-          </div>
-          <p>Search · RAG · Multi-Agent 新闻工作流</p>
-        </div>
-      </div>
-
-      <div className="app-header__meta" aria-label="应用状态">
-        <span className="app-header__label">News Agent V1.0</span>
-        <span className="mode-badge">
-          {generationMode === 'local-ai'
-            ? providerPresentation.activeLabel
-            : 'Demo 模式'}
+        <span>
+          <strong>NewsPilot</strong>
+          <small>学生记者报道工作台</small>
         </span>
-      </div>
+      </a>
+      <span className="np-edition">
+        v1.1 Beta · {reportingMode === 'course' ? '课程作业执行模式' : '校园媒体执行模式'}
+      </span>
     </header>
   );
 }

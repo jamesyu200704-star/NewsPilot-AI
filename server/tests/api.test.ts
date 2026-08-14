@@ -71,6 +71,7 @@ test('GET /api/health 返回 Provider 状态并禁止缓存', async () => {
       provider: 'mock',
       fallbackProvider: 'mock',
       searchProvider: 'mock',
+      transcriptionProvider: 'manual',
     });
   } finally {
     await close(server);

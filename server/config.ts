@@ -1,7 +1,8 @@
 import { existsSync } from 'node:fs';
 
 export type ServerProviderMode = 'mock' | 'ollama' | 'qwen' | 'openai';
-export type SearchProviderMode = 'mock' | 'brave';
+export type SearchProviderMode = 'manual' | 'mock' | 'searxng' | 'brave';
+export type TranscriptionProviderMode = 'manual' | 'local_whisper';
 
 export interface ServerConfig {
   host: string;
@@ -16,6 +17,16 @@ export interface ServerConfig {
   searchProvider: SearchProviderMode;
   braveSearchApiKey?: string;
   braveSearchTimeoutMs: number;
+  searxngBaseUrl: string;
+  searchResultLimit: number;
+  searchTimeoutMs: number;
+  searchRateLimitPerMinute: number;
+  searchMaxConcurrentFetches: number;
+  uploadMaxFileMb: number;
+  uploadMaxProjectMb: number;
+  transcriptionProvider: TranscriptionProviderMode;
+  localWhisperBaseUrl: string;
+  transcriptionMaxFileMb: number;
 }
 
 export const loadLocalEnvironment = () => {
@@ -46,10 +57,15 @@ export const readServerConfig = (
     rawProvider === 'ollama' || rawProvider === 'qwen' || rawProvider === 'openai'
       ? rawProvider
       : 'mock';
+  const rawSearchProvider = (environment.SEARCH_PROVIDER || environment.SEARCH_MODE || 'mock').trim().toLowerCase();
   const searchProvider: SearchProviderMode =
-    environment.SEARCH_MODE?.trim().toLowerCase() === 'brave'
-      ? 'brave'
+    rawSearchProvider === 'searxng' || rawSearchProvider === 'manual' || rawSearchProvider === 'brave'
+      ? rawSearchProvider
       : 'mock';
+  const transcriptionProvider: TranscriptionProviderMode =
+    environment.TRANSCRIPTION_PROVIDER?.trim().toLowerCase() === 'local_whisper'
+      ? 'local_whisper'
+      : 'manual';
 
   return {
     host: environment.SERVER_HOST?.trim() || '127.0.0.1',
@@ -68,6 +84,21 @@ export const readServerConfig = (
     braveSearchTimeoutMs: toPositiveInteger(
       environment.BRAVE_SEARCH_TIMEOUT_MS,
       10_000,
+    ),
+    searxngBaseUrl: withoutTrailingSlash(environment.SEARXNG_BASE_URL?.trim() || 'http://localhost:8080'),
+    searchResultLimit: Math.min(20, toPositiveInteger(environment.SEARCH_RESULT_LIMIT, 10)),
+    searchTimeoutMs: toPositiveInteger(environment.SEARCH_TIMEOUT_MS, 10_000),
+    searchRateLimitPerMinute: toPositiveInteger(environment.SEARCH_RATE_LIMIT_PER_MINUTE, 10),
+    searchMaxConcurrentFetches: Math.min(10, toPositiveInteger(environment.SEARCH_MAX_CONCURRENT_FETCHES, 3)),
+    uploadMaxFileMb: toPositiveInteger(environment.UPLOAD_MAX_FILE_MB, 10),
+    uploadMaxProjectMb: toPositiveInteger(environment.UPLOAD_MAX_PROJECT_MB, 50),
+    transcriptionProvider,
+    localWhisperBaseUrl: withoutTrailingSlash(
+      environment.LOCAL_WHISPER_BASE_URL?.trim() || 'http://localhost:9000',
+    ),
+    transcriptionMaxFileMb: Math.min(
+      100,
+      toPositiveInteger(environment.TRANSCRIPTION_MAX_FILE_MB, 100),
     ),
   };
 };

@@ -2,14 +2,19 @@
 
 NewsPilot AI 重视服务端密钥、用户输入、生成结果完整性和 API 可用性。请负责任地报告安全问题，不要在公开渠道披露可利用细节。
 
+## 用户研究与新闻材料
+
+不要通过公开 Issue、PR、截图或仓库提交真实参与者身份、采访对象、联系方式、逐字稿、音频、课程私人材料、匿名信源身份或 private note。研究模式只允许 P001 形式编号和最小本地事件；`research/results/` 默认不进入 Git。若发现隐私泄露、虚构采访/引语、off the record 误导出或关键事实被错误标记为已核实，请按 Critical 事件私下报告并停止发布。
+
 ## 受支持版本
 
 | 版本 | 安全更新 |
 | --- | --- |
-| 1.0.x | 支持 |
+| 0.9.x-beta | 支持 |
+| 1.2.x（内部里程碑） | 仅迁移兼容 |
 | 0.x | 不支持 |
 
-当前项目处于 V1.0 News Agent Release。安全修复以最新的 1.0.x 版本为准。
+当前项目处于 v1.2 Reporting Execution Release。安全修复以最新的 1.2.x 版本为准。
 
 ## 报告安全问题
 
@@ -39,7 +44,7 @@ NewsPilot AI 重视服务端密钥、用户输入、生成结果完整性和 API
 
 ## 密钥与个人信息
 
-- OpenAI 与 Brave Search 真实密钥只能存放在未提交的 <code>.env.local</code>、<code>.env</code> 或部署平台服务端 Secret。
+- OpenAI、旧版 Brave Search 和搜索网关真实密钥只能存放在未提交的 <code>.env.local</code>、<code>.env</code> 或部署平台服务端 Secret。
 - 不得创建 <code>VITE_OPENAI_API_KEY</code>，也不得给任何秘密加 <code>VITE_</code> 前缀。
 - 不得把真实秘密写入源码、测试、README、Issue、PR、构建产物或客户端日志。
 - 测试数据必须使用合成值，不包含真实姓名、电话、邮箱、身份证号或学号。
@@ -50,13 +55,20 @@ NewsPilot AI 重视服务端密钥、用户输入、生成结果完整性和 API
 - 浏览器本地 Mock 不发送用户输入。
 - API 模式会把输入发送到 Generator Service；OpenAI 模式还会发送到 OpenAI API。
 - <code>SEARCH_MODE=brave</code> 会把自动生成的检索词发送到 Brave Search API；返回网页摘要视为不可信外部数据。
+- <code>SEARCH_PROVIDER=searxng</code> 会把用户主动执行的检索词发送到配置的自托管服务；浏览器不会获得该内部地址。
 - 服务端 OpenAI 请求使用固定 HTTPS 端点、Authorization 请求头、超时、<code>store=false</code> 和严格结构校验。
 - Brave Search 请求使用固定 HTTPS 端点、服务端请求头、超时和 HTTP/HTTPS 来源过滤；密钥不会返回浏览器。
 - Qwen/Ollama/OpenAI 的策划、事实核查和编辑终审分别使用严格 JSON Schema，最终结果还会再次校验。
 - 当前 Node.js HTTP 服务提供 JSON Content-Type 检查、单进程请求窗口和并发上限，但没有账号、鉴权、分布式配额、TLS 或生产监控。
+- P1 来源抓取只接受 HTTP/HTTPS，执行 DNS/IP SSRF 检查并固定连接已验证 IP，重定向会重新解析复检；同时限制响应类型、体积和超时，并拒绝本机、内网与云元数据地址。
+- 搜索摘要只能保存为线索；引用校验拒绝 `metadata_only` 来源。网页和上传材料用不可信数据边界隔离，不执行其中脚本、宏、提示词或工具调用。
+- 上传材料当前在浏览器本地解析；支持格式和限制见 <code>docs/UPLOAD_AND_PARSING.md</code>，没有 OCR。
+- P2 采访对象真实身份、联系方式、私密笔记与 off-record 材料只保存在本地项目；课程提交、脱敏分享和公开演示导出会移除。
+- P2 不录音。可选 Local Whisper 仅允许回环地址，音频以内存请求转发且不写临时文件；浏览器和服务端都会校验格式、MIME、大小与签名。
+- 自动转写片段默认未复核；低置信度及姓名、数字、机构和专有词必须人工校正，未确认引语不能进入公开导出。
 - 公网部署必须由反向代理或 API 网关提供 TLS、访问控制、按身份分布式限流、成本保护和日志脱敏。
 - 生成内容是策划建议，不是已经完成的采访、调查或事实核验。
-- 项目目前没有数据库、文件上传、动态命令执行或多租户隔离。
+- 项目目前没有数据库、服务端文件上传、动态命令执行或多租户隔离。
 
 ## 负责任披露
 

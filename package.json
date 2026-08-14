@@ -1,8 +1,8 @@
 {
   "name": "newspilot-ai",
   "private": true,
-  "version": "1.0.0",
-  "description": "AI-assisted news topic planning and interview preparation tool for journalism students.",
+  "version": "1.1.0-beta.1",
+  "description": "A reporting workflow assistant that turns journalism assignments into executable interview and verification plans.",
   "license": "MIT",
   "type": "module",
   "engines": {
@@ -15,26 +15,39 @@
     "build:server": "tsc -p tsconfig.server.json",
     "build": "tsc -b && npm run build:server && vite build",
     "start:server": "node dist-server/server/index.js",
-    "test:server": "npm run build:server && node --test dist-server/server/tests/validation.test.js dist-server/server/tests/config.test.js dist-server/server/tests/新闻方法论.test.js dist-server/server/tests/提示词引擎.test.js dist-server/server/tests/检索与知识库.test.js dist-server/server/tests/braveSearchProvider.test.js dist-server/server/tests/工作流检索集成.test.js dist-server/server/tests/多Agent工作流.test.js dist-server/server/tests/generatorService.test.js dist-server/server/tests/ollamaProvider.test.js dist-server/server/tests/qwenProvider.test.js dist-server/server/tests/openAIProvider.test.js dist-server/server/tests/api.test.js dist-server/server/tests/clientGenerator.test.js dist-server/server/tests/clientMode.test.js dist-server/server/tests/clientProviderStatus.test.js dist-server/server/tests/markdownExport.test.js",
-    "test": "npm run test:server",
+    "test:server": "npm run build:server && node --test dist-server/server/tests/validation.test.js dist-server/server/tests/config.test.js dist-server/server/tests/新闻方法论.test.js dist-server/server/tests/提示词引擎.test.js dist-server/server/tests/检索与知识库.test.js dist-server/server/tests/braveSearchProvider.test.js dist-server/server/tests/工作流检索集成.test.js dist-server/server/tests/多Agent工作流.test.js dist-server/server/tests/generatorService.test.js dist-server/server/tests/ollamaProvider.test.js dist-server/server/tests/qwenProvider.test.js dist-server/server/tests/openAIProvider.test.js dist-server/server/tests/api.test.js dist-server/server/tests/clientGenerator.test.js dist-server/server/tests/clientMode.test.js dist-server/server/tests/clientProviderStatus.test.js dist-server/server/tests/markdownExport.test.js dist-server/server/tests/学生报道工作流.test.js dist-server/server/tests/P0用户价值.test.js dist-server/server/tests/本地项目仓库.test.js dist-server/server/tests/P1证据领域.test.js dist-server/server/tests/P1搜索与抓取.test.js dist-server/server/tests/P1持久化与导出.test.js dist-server/server/tests/P1证据API.test.js dist-server/server/tests/P1证据评测.test.js dist-server/server/tests/P2执行工作流.test.js dist-server/server/tests/P2转写与导出.test.js dist-server/server/tests/P2转写API.test.js dist-server/server/tests/P2集成流程.test.js dist-server/server/tests/P2端到端场景.test.js dist-server/server/tests/P2执行评测.test.js dist-server/server/tests/P3研究与发布.test.js dist-server/server/tests/P3发布包安全.test.js",
+    "test:ui": "vitest run",
+    "test": "npm run test:server && npm run test:ui",
+    "eval:campus": "npm run build:server && node dist-server/evals/运行校园报道评估.js",
+    "eval:p1": "npm run build:server && node dist-server/evals/p1-evidence/运行P1证据评测.js",
+    "eval:p2": "npm run build:server && node dist-server/evals/p2-execution/运行P2执行评测.js",
+    "eval:p3": "npm run build:server && node dist-server/evals/p3-validation/运行P3验证.js",
     "preview": "vite preview"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
     "ajv": "^8.20.0",
+    "docx": "^9.5.1",
     "express": "^5.2.1",
+    "jszip": "^3.10.1",
+    "mammoth": "^1.12.1",
+    "pdfjs-dist": "^6.2.108",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.4",
     "@types/express": "^5.0.6",
     "@types/node": "^26.1.2",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.6.0",
     "concurrently": "^10.0.4",
+    "jsdom": "^29.1.1",
     "tsx": "^4.23.1",
     "typescript": "^5.8.3",
-    "vite": "^7.0.4"
+    "vite": "^7.0.4",
+    "vitest": "^4.1.10"
   }
 }

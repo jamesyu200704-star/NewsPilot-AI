@@ -1,0 +1,13 @@
+{
+  "id": "",
+  "participantId": "P001",
+  "taskId": "",
+  "condition": "newspilot",
+  "startedAt": "",
+  "taskCompleted": false,
+  "majorAssistanceRequired": false,
+  "observedProblems": [],
+  "comments": [],
+  "synthetic": true,
+  "createdAt": ""
+}

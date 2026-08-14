@@ -1,0 +1,40 @@
+{
+  "format": "newspilot-local-projects",
+  "dataVersion": 3,
+  "exportedAt": "2026-08-13T00:00:00.000Z",
+  "projects": [{
+    "dataVersion": 3,
+    "id": "qa-campus-investigation",
+    "name": "P3 校园调查验收夹具",
+    "brief": {
+      "mode": "campus_media",
+      "rawTopic": "虚构线索：生成式 AI 是否已经普遍进入课程作业",
+      "assignmentType": "校园调查",
+      "platform": "虚构校园媒体",
+      "publishAt": "2026-08-20T18:00",
+      "targetLength": 1800,
+      "minimumInterviewees": 4,
+      "geographicScope": "虚构校园",
+      "targetAudience": "在校学生与教师",
+      "availableInterviewees": ["虚构学生", "虚构任课教师", "虚构教务人员"],
+      "existingMaterials": ["虚构课程群通知", "未经核实的同学聊天线索"],
+      "reportingResources": ["1 名学生记者", "5 天采访时间"],
+      "ethicalConstraints": ["不得公开作业内容与课程成绩", "社交媒体只作线索"],
+      "requiresDifferentSourceTypes": true,
+      "requiresHumanStory": false,
+      "requiresPlanningDocument": true,
+      "requiresInterviewSummary": false
+    },
+    "plan": null,
+    "selectedAngleId": "",
+    "evidenceWorkspace": { "schemaVersion": 1, "claims": [], "searchPlan": null, "sources": [], "evidence": [], "claimEvidenceMatrix": [], "conflicts": [], "uploadedMaterials": [], "updatedAt": "2026-08-13T00:00:00.000Z" },
+    "executionWorkspace": { "schemaVersion": 1, "tasks": [], "sources": [], "outreachAttempts": [], "sessions": [], "questions": [], "notes": [], "transcripts": [], "quotes": [], "leads": [], "evidenceGaps": [], "outlines": [], "assignmentChecks": [], "updatedAt": "2026-08-13T00:00:00.000Z" },
+    "createdAt": "2026-08-13T00:00:00.000Z",
+    "updatedAt": "2026-08-13T00:00:00.000Z"
+  }],
+  "fixtureMetadata": {
+    "synthetic": true,
+    "notice": "本示例为虚构教学数据。不对应真实人物、真实学校或真实事件。",
+    "scenario": "campus-investigation"
+  }
+}

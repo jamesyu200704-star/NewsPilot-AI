@@ -6,7 +6,7 @@
   "license": "MIT",
   "type": "module",
   "engines": {
-    "node": ">=20.19.0"
+    "node": ">=22 <26"
   },
   "scripts": {
     "dev": "concurrently --kill-others-on-fail -n api,web \"npm:dev:server\" \"npm:dev:web\"",
@@ -15,7 +15,7 @@
     "build:server": "tsc -p tsconfig.server.json",
     "build": "tsc -b && npm run build:server && vite build",
     "start:server": "node dist-server/server/index.js",
-    "test:server": "npm run build:server && node --test dist-server/server/tests/validation.test.js dist-server/server/tests/config.test.js dist-server/server/tests/新闻方法论.test.js dist-server/server/tests/提示词引擎.test.js dist-server/server/tests/检索与知识库.test.js dist-server/server/tests/braveSearchProvider.test.js dist-server/server/tests/工作流检索集成.test.js dist-server/server/tests/多Agent工作流.test.js dist-server/server/tests/generatorService.test.js dist-server/server/tests/ollamaProvider.test.js dist-server/server/tests/qwenProvider.test.js dist-server/server/tests/openAIProvider.test.js dist-server/server/tests/api.test.js dist-server/server/tests/clientGenerator.test.js dist-server/server/tests/clientMode.test.js dist-server/server/tests/clientProviderStatus.test.js dist-server/server/tests/markdownExport.test.js dist-server/server/tests/学生报道工作流.test.js dist-server/server/tests/P0用户价值.test.js dist-server/server/tests/本地项目仓库.test.js dist-server/server/tests/P1证据领域.test.js dist-server/server/tests/P1搜索与抓取.test.js dist-server/server/tests/P1持久化与导出.test.js dist-server/server/tests/P1证据API.test.js dist-server/server/tests/P1证据评测.test.js dist-server/server/tests/P2执行工作流.test.js dist-server/server/tests/P2转写与导出.test.js dist-server/server/tests/P2转写API.test.js dist-server/server/tests/P2集成流程.test.js dist-server/server/tests/P2端到端场景.test.js dist-server/server/tests/P2执行评测.test.js dist-server/server/tests/P3研究与发布.test.js dist-server/server/tests/P3发布包安全.test.js",
+    "test:server": "npm run build:server && node --test dist-server/server/tests/validation.test.js dist-server/server/tests/config.test.js dist-server/server/tests/新闻方法论.test.js dist-server/server/tests/提示词引擎.test.js dist-server/server/tests/检索与知识库.test.js dist-server/server/tests/braveSearchProvider.test.js dist-server/server/tests/工作流检索集成.test.js dist-server/server/tests/多Agent工作流.test.js dist-server/server/tests/generatorService.test.js dist-server/server/tests/ollamaProvider.test.js dist-server/server/tests/qwenProvider.test.js dist-server/server/tests/openAIProvider.test.js dist-server/server/tests/api.test.js dist-server/server/tests/Vercel服务端函数.test.js dist-server/server/tests/clientGenerator.test.js dist-server/server/tests/clientMode.test.js dist-server/server/tests/clientProviderStatus.test.js dist-server/server/tests/markdownExport.test.js dist-server/server/tests/学生报道工作流.test.js dist-server/server/tests/P0用户价值.test.js dist-server/server/tests/本地项目仓库.test.js dist-server/server/tests/P1证据领域.test.js dist-server/server/tests/P1搜索与抓取.test.js dist-server/server/tests/P1持久化与导出.test.js dist-server/server/tests/P1证据API.test.js dist-server/server/tests/P1证据评测.test.js dist-server/server/tests/P2执行工作流.test.js dist-server/server/tests/P2转写与导出.test.js dist-server/server/tests/P2转写API.test.js dist-server/server/tests/P2集成流程.test.js dist-server/server/tests/P2端到端场景.test.js dist-server/server/tests/P2执行评测.test.js dist-server/server/tests/P3研究与发布.test.js dist-server/server/tests/P3发布包安全.test.js",
     "test:ui": "vitest run",
     "test": "npm run test:server && npm run test:ui",
     "eval:campus": "npm run build:server && node dist-server/evals/运行校园报道评估.js",

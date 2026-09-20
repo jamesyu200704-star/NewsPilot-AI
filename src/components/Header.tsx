@@ -18,7 +18,7 @@ export function Header({ reportingMode }: HeaderProps) {
         </span>
       </a>
       <span className="np-edition">
-        v1.1 Beta · {reportingMode === 'course' ? '课程作业执行模式' : '校园媒体执行模式'}
+        {reportingMode === 'course' ? '采访准备 · 新闻编辑' : '校园采访 · 新闻编辑'}
       </span>
     </header>
   );

@@ -33,6 +33,28 @@ import {
 
 const now = '2026-08-13T08:00:00.000Z';
 
+test('提纲的每条主张都必须绑定支持它的证据，不能借用无关摘录', async () => {
+  const { createClaimsFromBrief } = await import('../../shared/证据工作流.js');
+  const claims = createClaimsFromBrief(brief);
+  const result = evaluateOutlineSupport({
+    section: { id: 's', title: '正文', purpose: '', materialIds: [], claimIds: [claims[0]!.id], quoteIds: [], evidenceIds: ['e'], gapIds: [], draftNotes: '', supportStatus: 'unsupported', order: 1 },
+    claims,
+    evidence: [{ id: 'e', sourceId: 'src', excerpt: '无关材料', normalizedMeaning: '', relation: 'supports', claimIds: [], directness: 'direct', userConfirmed: true, createdAt: now }],
+    quotes: [], conflicts: [],
+  });
+  assert.notEqual(result.status, 'supported');
+});
+
+test('关键核验必须重新计算，不能信任过期的缓存状态', async () => {
+  const { createClaimsFromBrief } = await import('../../shared/证据工作流.js');
+  const { createEmptyEvidenceWorkspace } = await import('../../shared/证据工作区.js');
+  const evidenceWorkspace = createEmptyEvidenceWorkspace();
+  evidenceWorkspace.claims = createClaimsFromBrief(brief).map((claim) => ({ ...claim, importance: 'critical' as const }));
+  evidenceWorkspace.claimEvidenceMatrix = [{ claimId: evidenceWorkspace.claims[0]!.id, verificationStatus: 'verified', supportingEvidenceIds: [], contradictingEvidenceIds: [], contextualEvidenceIds: [], independentSourceGroupCount: 1, primarySourceCount: 1, reasoning: '旧缓存', remainingWork: [] }];
+  const checks = runAssignmentCheck({ brief, workspace: createExecutionWorkspaceFromPlan(createStudentReportingPlan(brief), now), evidenceWorkspace });
+  assert.equal(checks.find((item) => item.key === 'critical_claims')!.status, 'blocking');
+});
+
 const brief: ReportingBrief = {
   mode: 'course',
   rawTopic: '学校新规实施后，晚归学生的通行体验出现变化',

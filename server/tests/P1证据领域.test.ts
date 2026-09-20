@@ -88,6 +88,20 @@ const evidence = (overrides: Partial<EvidenceItem> = {}): EvidenceItem => ({
   ...overrides,
 });
 
+test('抓取失败、仅元数据和空摘录不能把事实升级为已核实', () => {
+  for (const extractionStatus of ['failed', 'metadata_only'] as const) {
+    const row = buildP1ClaimEvidenceMatrix([claim()], [source({ extractionStatus })], [evidence()])[0]!;
+    assert.equal(row.verificationStatus, 'unverified');
+  }
+  assert.equal(buildP1ClaimEvidenceMatrix([claim()], [source()], [evidence({ excerpt: '  ' })])[0]!.verificationStatus, 'unverified');
+});
+
+test('两个间接二手来源不能等同于直接核实', () => {
+  const sources = [source({ sourceType: 'news_report' }), source({ id: 'S-002', sourceType: 'news_report', independenceGroupId: 'IG-002' })];
+  const items = [evidence({ directness: 'interpretive' }), evidence({ id: 'E-002', sourceId: 'S-002', directness: 'indirect' })];
+  assert.notEqual(buildP1ClaimEvidenceMatrix([claim()], sources, items)[0]!.verificationStatus, 'verified');
+});
+
 test('用户的泛化指控被拆成待验证 allegation，而不是已知事实', () => {
   const claims = createClaimsFromBrief(brief, () => '2026-08-13T00:00:00.000Z');
 

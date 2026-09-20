@@ -23,6 +23,8 @@ test('Prompt Engine 注入方法论上下文并执行六步新闻编辑流程', 
   }
   assert.match(prompt.system, /禁止编造事实/u);
   assert.match(prompt.system, /不得修改程序计算的新闻价值评分/u);
+  assert.match(prompt.system, /angles.*people.*system.*trend/u);
+  assert.match(prompt.system, /newsValueScore.*0.*5/u);
   assert.match(prompt.user, /方法论上下文/u);
   assert.match(prompt.user, /campus-education/u);
   assert.match(
@@ -50,5 +52,7 @@ test('三个 Agent 使用相互独立的策划、核查和终审提示词', () =
   assert.match(factCheckPrompt.system, /采访伦理/u);
   assert.match(editorPrompt.system, /新闻编辑 Agent/u);
   assert.match(editorPrompt.system, /不得删除未解决风险/u);
+  assert.match(editorPrompt.system, /newsValueScore.*0.*5/u);
+  assert.match(editorPrompt.system, /不得改成 10 分制/u);
   assert.match(editorPrompt.user, /unsupportedClaims/u);
 });

@@ -7,6 +7,7 @@ import type {
   StoryOutlineSection,
 } from './报道执行模型.js';
 import { canUseAsDirectQuote } from './报道执行工作区.js';
+import { buildP1ClaimEvidenceMatrix } from './核验规则.js';
 
 export function evaluateOutlineSupport(input: {
   section: StoryOutlineSection;
@@ -17,13 +18,15 @@ export function evaluateOutlineSupport(input: {
 }) {
   const reasons: string[] = [];
   const validClaimIds = new Set(input.claims.map((claim) => claim.id));
-  const validEvidenceIds = new Set(input.evidence.filter((item) => item.userConfirmed).map((item) => item.id));
+  const supportingEvidence = input.evidence.filter((item) => item.userConfirmed && item.excerpt.trim() && item.relation === 'supports');
+  const validEvidenceIds = new Set(supportingEvidence.map((item) => item.id));
   const validQuoteIds = new Set(input.quotes.filter((quote) => canUseAsDirectQuote(quote).ok).map((quote) => quote.id));
   const unresolvedConflicts = input.conflicts.filter((conflict) =>
     conflict.status === 'open' && input.section.claimIds.includes(conflict.claimId),
   );
   if (input.section.claimIds.some((id) => !validClaimIds.has(id))) reasons.push('包含不存在或未保留的主张。');
-  if (input.section.claimIds.length && !input.section.evidenceIds.some((id) => validEvidenceIds.has(id))) reasons.push('主张缺少已确认、可定位的证据。');
+  if (input.section.claimIds.some((claimId) => !supportingEvidence.some((item) => input.section.evidenceIds.includes(item.id) && item.claimIds.includes(claimId)))) reasons.push('主张缺少已确认、可定位且与该主张绑定的支持证据。');
+  if (input.section.evidenceIds.some((id) => !validEvidenceIds.has(id))) reasons.push('包含不存在、未确认或不能提供支持的证据。');
   if (input.section.quoteIds.some((id) => !validQuoteIds.has(id))) reasons.push('包含未确认或不可使用的直接引语。');
   if (unresolvedConflicts.length) reasons.push('关键主张仍有未解决的来源冲突。');
   const hasAnySupport = input.section.evidenceIds.some((id) => validEvidenceIds.has(id)) || input.section.quoteIds.some((id) => validQuoteIds.has(id));
@@ -59,7 +62,7 @@ export function runAssignmentCheck(input: {
   );
   const minimum = brief.minimumInterviewees || 0;
   const deadline = brief.deadline || brief.publishAt;
-  const criticalRows = evidenceWorkspace.claimEvidenceMatrix.filter((row) =>
+  const criticalRows = buildP1ClaimEvidenceMatrix(evidenceWorkspace.claims, evidenceWorkspace.sources, evidenceWorkspace.evidence).filter((row) =>
     evidenceWorkspace.claims.find((claim) => claim.id === row.claimId)?.importance === 'critical',
   );
   const invalidQuotes = workspace.quotes.filter((quote) => !canUseAsDirectQuote(quote).ok);

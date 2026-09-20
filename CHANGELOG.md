@@ -6,6 +6,20 @@
 
 ## [Unreleased]
 
+### Added
+
+- 新增 Vercel Serverless Functions 入口，复用现有 Express `/api/health` 与 `/api/generate`。
+- 新增受保护 OpenAI Preview 验收脚本，自动检查健康状态、真实生成、降级状态和三 Agent 执行轨迹。
+
+### Changed
+
+- 将服务端 Provider 初始化提取为可复用运行时，支持在受保护的 Vercel Preview 中配置 OpenAI。
+- OpenAI 非成功响应只记录经过白名单过滤的错误类型、错误代码与请求 ID，便于区分额度、限流和模型权限问题，同时避免把上游消息或请求内容写入日志。
+
+### Security
+
+- API Key 仍只由服务端环境变量读取，浏览器构建不包含密钥；公开生产环境默认继续使用 Mock。
+
 ## [1.1.0-beta.1] - 2026-08-14
 
 ### Added

@@ -36,6 +36,31 @@ type JsonRecord = Record<string, unknown>;
 const isRecord = (value: unknown): value is JsonRecord =>
   typeof value === 'object' && value !== null;
 
+const safeDiagnosticTokenPattern = /^[A-Za-z0-9._-]{1,80}$/u;
+
+const asSafeDiagnosticToken = (value: unknown) =>
+  typeof value === 'string' && safeDiagnosticTokenPattern.test(value)
+    ? value
+    : undefined;
+
+const extractSafeErrorDiagnostics = async (response: Response) => {
+  try {
+    const payload: unknown = await response.json();
+    if (!isRecord(payload) || !isRecord(payload.error)) {
+      return [];
+    }
+
+    const type = asSafeDiagnosticToken(payload.error.type);
+    const code = asSafeDiagnosticToken(payload.error.code);
+
+    return [type ? 'type: ' + type : '', code ? 'code: ' + code : ''].filter(
+      Boolean,
+    );
+  } catch {
+    return [];
+  }
+};
+
 const extractOutputText = (payload: unknown) => {
   if (!isRecord(payload)) {
     throw new Error('OpenAI 返回了无法识别的响应。');
@@ -130,11 +155,17 @@ export class OpenAIProvider implements GenerationProvider {
       });
 
       if (!response.ok) {
-        const requestId = response.headers.get('x-request-id');
+        const requestId = asSafeDiagnosticToken(
+          response.headers.get('x-request-id'),
+        );
+        const diagnostics = await extractSafeErrorDiagnostics(response);
         throw new Error(
-          'OpenAI 请求失败（HTTP ' +
-            response.status +
-            (requestId ? '，request_id: ' + requestId : '') +
+          'OpenAI 请求失败（' +
+            [
+              'HTTP ' + response.status,
+              ...diagnostics,
+              ...(requestId ? ['request_id: ' + requestId] : []),
+            ].join('，') +
             '）。',
         );
       }

@@ -1,4 +1,5 @@
 import express, {
+  type Express,
   type ErrorRequestHandler,
   type RequestHandler,
 } from 'express';
@@ -8,6 +9,8 @@ import {
   type GenerateRouteOptions,
 } from './routes/generate.js';
 import type { GeneratorService } from './services/generator.js';
+import { EditorialService } from './services/editor.js';
+import { createEditorRouter } from './routes/editor.js';
 import {
   createEvidenceRouter,
   type EvidenceRouteOptions,
@@ -17,7 +20,8 @@ import {
   type TranscriptionRouteOptions,
 } from './routes/transcription.js';
 
-const JSON_BODY_LIMIT = 32 * 1024;
+// 共享 Schema 允许 30,000 个字符；中文 UTF-8 最多约占 90KB，再预留 JSON 字段开销。
+const JSON_BODY_LIMIT = 128 * 1024;
 
 export type ApiServerOptions = GenerateRouteOptions & EvidenceRouteOptions & TranscriptionRouteOptions;
 
@@ -55,10 +59,10 @@ const handleRequestError: ErrorRequestHandler = (
   response.status(500).json({ error: '生成服务暂时不可用。' });
 };
 
-export const createApiServer = (
+export const createApiApp = (
   generatorService: GeneratorService,
   options: ApiServerOptions = {},
-) => {
+): Express => {
   const app = express();
   app.disable('x-powered-by');
   app.use(securityHeaders);
@@ -75,11 +79,23 @@ export const createApiServer = (
       ok: true,
       provider: generatorService.providerName,
       fallbackProvider: generatorService.fallbackProviderName,
-      searchProvider: generatorService.retrievalProviderName,
+      searchProvider: options.evidenceSearchService?.providerName || generatorService.retrievalProviderName,
       transcriptionProvider: options.transcriptionProvider?.name || 'manual',
     });
   });
   app.use('/api/generate', createGenerateRouter(generatorService, options));
+  app.use(
+    '/api/editor',
+    createEditorRouter(
+      new EditorialService(
+        generatorService.editorialPrimaryProvider,
+        undefined,
+        console,
+        options.evidenceSearchService,
+      ),
+      options,
+    ),
+  );
   app.use('/api/evidence', createEvidenceRouter(options));
   app.use('/api/transcription', createTranscriptionRouter(options));
   app.use((_request, response) => {
@@ -87,5 +103,10 @@ export const createApiServer = (
   });
   app.use(handleRequestError);
 
-  return createServer(app);
+  return app;
 };
+
+export const createApiServer = (
+  generatorService: GeneratorService,
+  options: ApiServerOptions = {},
+) => createServer(createApiApp(generatorService, options));

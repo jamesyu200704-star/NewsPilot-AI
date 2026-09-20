@@ -123,7 +123,7 @@ test('产品事件只保留标量、非敏感元数据', () => {
       count: 2,
       successful: true,
       transcript: '未经同意的逐字稿',
-      apiKey: 'sk-not-a-real-key',
+      apiKey: 'fixture-openai-key-not-real',
       localPath: 'C:\\Users\\person\\private.txt',
       nested: { forbidden: true },
     } as never,

@@ -343,12 +343,19 @@ const retrievalToEvidenceLedger = (
     contradicts: [],
   }));
 
-const buildActionPlan = (brief: ReportingBrief) => [
-  { order: 1, when: '现在—2 小时', action: '把新闻问题发给一名直接经历者做 15 分钟初访。', output: '一条可验证时间线和两个待核实说法' },
-  { order: 2, when: '今天', action: '取得规则、通知或课程要求原件，并记录发布日期和适用范围。', output: '至少一条原始证据记录' },
-  { order: 3, when: '24 小时内', action: `联系至少 ${Math.max(2, brief.minimumInterviewees || 2)} 名不同角色的受访者。`, output: '确认采访时间与替代信源' },
-  { order: 4, when: '48 小时内', action: '更新证据矩阵：区分已核实、部分核实、未核实和冲突。', output: '可继续执行或需要收缩的编辑判断' },
-];
+const buildActionPlan = (brief: ReportingBrief) => brief.assignmentType === '消息'
+  ? [
+      { order: 1, when: '现在—2 小时', action: '列出新闻稿必须回答的三条事实：发生了什么、何时发生、影响谁。', output: '新闻事实清单' },
+      { order: 2, when: '今天', action: '找到官方通知、原始数据或现场材料，并记录来源、日期和适用范围。', output: '可追溯资料清单' },
+      { order: 3, when: '24 小时内', action: '核对关键数字和名称，再用“事实—背景—影响”写出导语与正文提纲。', output: '新闻稿初稿结构' },
+      { order: 4, when: '发布前', action: '逐项复核时间、数字、姓名和来源，把仍未确认的信息明确标为待核实。', output: '发布前事实核验记录' },
+    ]
+  : [
+      { order: 1, when: '现在—2 小时', action: '把新闻问题发给一名直接经历者做 15 分钟初访。', output: '一条可验证时间线和两个待核实说法' },
+      { order: 2, when: '今天', action: '取得规则、通知或课程要求原件，并记录发布日期和适用范围。', output: '至少一条原始证据记录' },
+      { order: 3, when: '24 小时内', action: `联系至少 ${Math.max(2, brief.minimumInterviewees || 2)} 名不同角色的受访者。`, output: '确认采访时间与替代信源' },
+      { order: 4, when: '48 小时内', action: '更新证据矩阵：区分已核实、部分核实、未核实和冲突。', output: '可继续执行或需要收缩的编辑判断' },
+    ];
 
 export const createStudentReportingPlan = (
   brief: ReportingBrief,

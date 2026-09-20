@@ -2,6 +2,9 @@ import type { SearchQuery } from '../../shared/证据领域模型.js';
 import type { SearchOptions, SearchProvider, SearchProviderResult } from '../search/p1/SearchProvider.js';
 
 export class EvidenceSearchService {
+  get providerName() {
+    return this.primaryProvider.id;
+  }
   constructor(
     private readonly primaryProvider: SearchProvider,
     private readonly manualFallback: SearchProvider,

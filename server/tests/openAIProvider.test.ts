@@ -146,3 +146,40 @@ test('服务端没有 Key 时 OpenAIProvider 明确失败且不会发出请求',
   await assert.rejects(() => provider.generate(sampleContext), /OPENAI_API_KEY/);
   assert.equal(requested, false);
 });
+
+test('OpenAIProvider 对非成功响应只暴露安全错误代码', async () => {
+  const provider = new OpenAIProvider({
+    apiKey: ['server', 'test', 'credential'].join('-'),
+    model: 'test-model',
+    fetchImplementation: async () =>
+      new Response(
+        JSON.stringify({
+          error: {
+            message: '这段上游详情可能包含账户信息，不应写入应用日志。',
+            type: 'insufficient_quota',
+            code: 'insufficient_quota',
+          },
+        }),
+        {
+          status: 429,
+          headers: {
+            'Content-Type': 'application/json',
+            'x-request-id': 'request-safe-diagnostic',
+          },
+        },
+      ),
+  });
+
+  await assert.rejects(
+    () => provider.generate(sampleContext),
+    (error) => {
+      assert.ok(error instanceof Error);
+      assert.match(error.message, /HTTP 429/u);
+      assert.match(error.message, /type: insufficient_quota/u);
+      assert.match(error.message, /code: insufficient_quota/u);
+      assert.match(error.message, /request_id: request-safe-diagnostic/u);
+      assert.doesNotMatch(error.message, /账户信息/u);
+      return true;
+    },
+  );
+});

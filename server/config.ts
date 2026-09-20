@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 
 export type ServerProviderMode = 'mock' | 'ollama' | 'qwen' | 'openai';
-export type SearchProviderMode = 'manual' | 'mock' | 'searxng' | 'brave';
+export type SearchProviderMode = 'manual' | 'mock' | 'searxng' | 'brave' | 'bing_news';
 export type TranscriptionProviderMode = 'manual' | 'local_whisper';
 
 export interface ServerConfig {
@@ -59,7 +59,7 @@ export const readServerConfig = (
       : 'mock';
   const rawSearchProvider = (environment.SEARCH_PROVIDER || environment.SEARCH_MODE || 'mock').trim().toLowerCase();
   const searchProvider: SearchProviderMode =
-    rawSearchProvider === 'searxng' || rawSearchProvider === 'manual' || rawSearchProvider === 'brave'
+    rawSearchProvider === 'searxng' || rawSearchProvider === 'manual' || rawSearchProvider === 'brave' || rawSearchProvider === 'bing_news'
       ? rawSearchProvider
       : 'mock';
   const transcriptionProvider: TranscriptionProviderMode =

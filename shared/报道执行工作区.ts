@@ -166,6 +166,9 @@ export const isExecutionWorkspace = (value: unknown): value is ExecutionWorkspac
   return value.schemaVersion === 1 &&
     ['tasks', 'sources', 'outreachAttempts', 'sessions', 'questions', 'notes', 'transcripts', 'quotes', 'leads', 'evidenceGaps', 'outlines', 'assignmentChecks']
       .every((key) => Array.isArray(value[key])) &&
+    (value.sources as unknown[]).every((source) =>
+      isRecord(source) && typeof source.role === 'string' && typeof source.sourceType === 'string',
+    ) &&
     typeof value.updatedAt === 'string' &&
     !Number.isNaN(Date.parse(value.updatedAt));
 };

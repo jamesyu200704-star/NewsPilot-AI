@@ -12,6 +12,14 @@ import {
   type RetrievalContext,
   type VerificationReview,
 } from '../shared/generation.js';
+import {
+  editorialTaskRequestJsonSchema,
+  editorialTaskResultJsonSchema,
+  interviewPlanJsonSchema,
+  type EditorialTaskRequest,
+  type EditorialTaskResult,
+  type InterviewPlan,
+} from '../shared/编辑任务模型.js';
 
 const ajv = new Ajv({ allErrors: true, strict: true });
 
@@ -30,6 +38,15 @@ const validateVerificationReview = ajv.compile(
 const validateEditorialRevision = ajv.compile(
   editorialRevisionJsonSchema,
 ) as ValidateFunction<EditorialRevision>;
+const validateEditorialTaskRequest = ajv.compile(
+  editorialTaskRequestJsonSchema,
+) as ValidateFunction<EditorialTaskRequest>;
+const validateEditorialTaskResult = ajv.compile(
+  editorialTaskResultJsonSchema,
+) as ValidateFunction<EditorialTaskResult>;
+const validateInterviewPlan = ajv.compile(
+  interviewPlanJsonSchema,
+) as ValidateFunction<InterviewPlan>;
 
 const formatErrors = (errors: ErrorObject[] | null | undefined) =>
   (errors ?? []).map((error) => {
@@ -51,6 +68,28 @@ export class SchemaValidationError extends Error {
 export function assertBriefInput(value: unknown): asserts value is BriefInput {
   if (!validateBriefInput(value)) {
     throw new SchemaValidationError('用户输入', validateBriefInput.errors);
+  }
+}
+
+export function assertEditorialTaskRequest(
+  value: unknown,
+): asserts value is EditorialTaskRequest {
+  if (!validateEditorialTaskRequest(value)) {
+    throw new SchemaValidationError('编辑任务输入', validateEditorialTaskRequest.errors);
+  }
+}
+
+export function assertEditorialTaskResult(
+  value: unknown,
+): asserts value is EditorialTaskResult {
+  if (!validateEditorialTaskResult(value)) {
+    throw new SchemaValidationError('编辑任务结果', validateEditorialTaskResult.errors);
+  }
+}
+
+export function assertInterviewPlan(value: unknown): asserts value is InterviewPlan {
+  if (!validateInterviewPlan(value)) {
+    throw new SchemaValidationError('采访计划', validateInterviewPlan.errors);
   }
 }
 

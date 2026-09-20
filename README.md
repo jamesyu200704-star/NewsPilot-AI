@@ -4,11 +4,11 @@
 [![License](https://img.shields.io/github/license/jamesyu200704-star/NewsPilot-AI)](LICENSE)
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Vercel-000000?logo=vercel)](https://newspilot-ai-ashy.vercel.app)
 
-**把一个宽泛选题，转成学生记者在截止期内真正能完成的报道计划。**
+**把已有采访材料整理成采访稿，或编辑已有新闻稿与评论配发。**
 
-NewsPilot 是面向新闻传播专业学生与校园媒体的报道工作台。它帮助用户将模糊线索转化为可采访、可核实、可执行的报道方案。它不替用户“写一篇看起来像新闻的文章”，而是把课程要求、新闻价值、选题策略、信源地图、采访问题与事实核查组织成一份可执行工作单。
+NewsPilot 是面向新闻传播专业学生与校园媒体的本地编辑工具。首页只有两个任务：用户粘贴真实采访转写、笔记或问答记录后生成采访稿；或粘贴已有新闻稿、消息稿、评论草稿后进行语言润色、结构修改或评论配发。
 
-AI-assisted reporting workflow for journalism students: from assignment brief to angle, sources, interview questions and verification plan.
+本地 Qwen/Ollama 只处理用户当前提交的材料；模型不可用时，系统会明确显示基于原材料的 Mock 整理示例。它不补充没有出处的事实、赛果、数字、人物身份或引语，候选引语与待核实项都需要人工复核。
 
 [打开在线演示](https://newspilot-ai-ashy.vercel.app)
 
@@ -272,9 +272,11 @@ Copy-Item .env.example .env.local
 
 ```dotenv
 VITE_GENERATION_MODE=local-ai
+VITE_API_TIMEOUT_MS=360000
 GENERATION_MODE=qwen
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=qwen2.5:1.5b
+OLLAMA_TIMEOUT_MS=300000
 ```
 
 随后启动 Ollama 与项目：
@@ -284,7 +286,9 @@ ollama serve
 npm run dev
 ```
 
-如果模型未启动、输出结构非法或后端不可达，系统会明确提示并回到浏览器 Mock。若将 `OLLAMA_BASE_URL` 改为远程地址，输入会发送到该服务，请自行确认信任与隐私边界。
+`qwen2.5:1.5b` 是低资源本地演示配置。完整流程会依次执行新闻策划、事实核查和编辑终审，首次生成可能需要一至数分钟，因此示例为浏览器和 Ollama 保留了较长超时。模型输出还会经过 JSON Schema、证据 ID 白名单和高风险事项确定性合并；未通过校验时才回到浏览器 Mock。
+
+如果模型未启动、输出结构非法、超过超时或后端不可达，系统会明确提示并回到浏览器 Mock。若将 `OLLAMA_BASE_URL` 改为远程地址，输入会发送到该服务，请自行确认信任与隐私边界。
 
 ## 环境变量与密钥安全
 
@@ -293,10 +297,12 @@ npm run dev
 | 变量 | 默认值 | 位置 | 用途 |
 | --- | --- | --- | --- |
 | `VITE_GENERATION_MODE` | `mock` | 浏览器 | `mock` 或 `local-ai`；不得包含秘密。 |
+| `VITE_API_TIMEOUT_MS` | `360000` | 浏览器 | 本地三 Agent 生成请求超时，单位毫秒。 |
 | `VITE_EVIDENCE_MODE` | `mock` | 浏览器 | `mock` 或 `live`，不包含搜索地址或秘密。 |
 | `GENERATION_MODE` | `mock` | 服务端 | `mock`、`qwen`、`ollama`、`openai`。 |
 | `OLLAMA_BASE_URL` | `http://localhost:11434` | 服务端 | Ollama 地址。 |
 | `OLLAMA_MODEL` | `qwen2.5:1.5b` | 服务端 | 本地模型名称。 |
+| `OLLAMA_TIMEOUT_MS` | `300000` | 服务端 | 单次 Ollama 结构化生成超时，单位毫秒。 |
 | `OPENAI_API_KEY` | 空 | 服务端 | 可选 OpenAI Provider 密钥。 |
 | `OPENAI_MODEL` | 示例值 | 服务端 | OpenAI 模型名称。 |
 | `SEARCH_PROVIDER` | `manual` | 服务端 | `manual`、`mock` 或 `searxng`。 |
@@ -413,7 +419,9 @@ P3 研究材料位于 [`research/`](research/README.md)，旧版 P0 材料保留
 
 ## 部署
 
-仓库包含 `vercel.json`。静态 Vercel 演示建议使用：
+仓库包含 `vercel.json`，并提供 `api/health.ts` 与 `api/generate.ts`，可将现有 Express 生成服务作为 Vercel Serverless Functions 运行。
+
+安全的公开 Mock 部署使用：
 
 ```dotenv
 VITE_GENERATION_MODE=mock
@@ -421,7 +429,33 @@ VITE_EVIDENCE_MODE=mock
 VITE_RESEARCH_MODE=false
 ```
 
-Vercel 会执行 `npm ci` 与 `npm run build`，输出目录为 `dist`。静态部署可运行 Mock、手动来源、本地上传、人工转写、任务/采访记录、报道提纲、作业检查和浏览器端 DOCX/ZIP 导出；不会运行 Express、SearXNG、网页抓取或本地 Whisper。实时搜索、Qwen/Ollama/OpenAI 和本地 Whisper 需要单独运行受保护的本地/服务端组件。
+Vercel Serverless 不能直接运行或访问开发者电脑上的 Ollama，因此公开站点默认保持 Mock。需要展示真实开源千问时，请在本机使用上一节的 `GENERATION_MODE=qwen` 配置录制；若未来部署到带 GPU 的受保护服务，再将后端地址接入前端。
+
+如果另行使用受保护的云端 Provider Preview，可使用：
+
+```dotenv
+VITE_GENERATION_MODE=local-ai
+GENERATION_MODE=openai
+OPENAI_API_KEY=在 Vercel Secret 中填写
+OPENAI_MODEL=gpt-5.6-terra
+OPENAI_TIMEOUT_MS=30000
+SEARCH_PROVIDER=manual
+TRANSCRIPTION_PROVIDER=manual
+```
+
+Vercel 会执行 `npm ci` 与 `npm run build`，输出目录为 `dist`。`OPENAI_API_KEY` 必须只配置在 Vercel 的服务端环境变量中，不得添加 `VITE_` 前缀，也不得写入仓库。AI Preview 建议保持访问保护；如果公开开放付费模型接口，还需要平台级身份验证、分布式限流与成本上限，不能只依赖单实例内存限流。
+
+`/api/health` 显示 `provider: openai` 只代表服务端配置已加载，发布验收仍必须完成一次 `/api/generate`。若运行日志出现 `credit_balance_exhausted`，需要先在 OpenAI API 账户补充可用余额；更换模型不能绕过账户余额限制。
+
+登录 Vercel CLI 后，可以用仓库内的安全验收脚本一次完成检查：
+
+```powershell
+& '.\scripts\验证OpenAI预览.ps1' -DeploymentUrl 'https://你的-preview.vercel.app'
+```
+
+脚本不读取或输出 API Key；只有健康检查为 OpenAI、真实生成没有降级，并且策划、事实核查和编辑终审三个 Agent 全部完成时才返回成功。
+
+Mock、手动来源、本地上传、人工转写、任务/采访记录、报道提纲、作业检查和浏览器端 DOCX/ZIP 导出仍可独立运行。SearXNG、网页抓取和本地 Whisper 继续需要单独部署的受保护服务。
 
 GitHub Pages 也可托管 Mock 静态版，Vite `base: './'` 已兼容子路径资源；真实 Provider 不应直接暴露在公开静态站点。
 

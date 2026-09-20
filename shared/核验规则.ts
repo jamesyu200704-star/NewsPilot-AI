@@ -44,6 +44,8 @@ export function buildP1ClaimEvidenceMatrix(
       return Boolean(
         source &&
         !source.userRejected &&
+        !['failed', 'metadata_only'].includes(source.extractionStatus) &&
+        item.excerpt.trim().length > 0 &&
         ['A', 'B'].includes(source.credibilityTier) &&
         !['social_post', 'repost', 'commercial_content', 'unknown'].includes(source.sourceType),
       );
@@ -68,7 +70,7 @@ export function buildP1ClaimEvidenceMatrix(
       trustedSupports
         .filter((item) => {
           const source = sourceById.get(item.sourceId)!;
-          return highQualitySecondary.has(source.sourceType) && ['A', 'B'].includes(source.credibilityTier);
+          return highQualitySecondary.has(source.sourceType) && ['A', 'B'].includes(source.credibilityTier) && item.directness === 'direct';
         })
         .map((item) => sourceById.get(item.sourceId)!.independenceGroupId || item.sourceId),
     ).size;

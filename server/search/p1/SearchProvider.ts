@@ -21,7 +21,7 @@ export interface SearchCandidate {
 }
 
 export interface SearchProviderResult {
-  providerId: 'manual' | 'mock' | 'searxng';
+  providerId: 'manual' | 'mock' | 'searxng' | 'bing_news';
   status: 'manual' | 'mock' | 'live' | 'failed';
   queryId: string;
   results: SearchCandidate[];

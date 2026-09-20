@@ -23,6 +23,7 @@ pnpm-debug.log*
 Thumbs.db
 
 .playwright-cli/
+.superpowers/
 output/
 演示视频/
 .vercel/

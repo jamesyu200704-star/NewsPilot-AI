@@ -46,6 +46,8 @@ export function createBrowserProjectRepository(
   const read = (): LocalReportingProject[] => {
     const stored = storage.getItem(STORAGE_KEY);
     if (!stored) return [];
+    let normalizedProjects: LocalReportingProject[];
+    let needsWrite = false;
     try {
       const value: unknown = JSON.parse(stored);
       if (!Array.isArray(value)) throw new Error('项目列表格式错误。');
@@ -65,7 +67,7 @@ export function createBrowserProjectRepository(
         projects: value,
       }));
       let sourceTypesUpdated = false;
-      const normalizedProjects = validated.projects.map((project) => ({
+      normalizedProjects = validated.projects.map((project) => ({
         ...project,
         executionWorkspace: {
           ...project.executionWorkspace,
@@ -78,16 +80,19 @@ export function createBrowserProjectRepository(
           }),
         },
       }));
-      if (storedVersion !== validated.dataVersion || sourceTypesUpdated) write(normalizedProjects);
-      return normalizedProjects;
-    } catch (error) {
-      console.warn('[NewsPilot] 本地项目数据损坏，已隔离该数据。', error);
-      storage.removeItem(STORAGE_KEY);
-      return [];
+      needsWrite = storedVersion !== validated.dataVersion || sourceTypesUpdated;
+    } catch {
+      // Never treat unreadable data as an empty repository: callers would overwrite it.
+      throw new Error('本地项目数据无法读取，原始数据已保留。请先备份并检查数据格式。');
     }
+    // Storage failures must not be interpreted as corrupt project data.
+    if (needsWrite) write(normalizedProjects);
+    return normalizedProjects;
   };
 
   const write = (projects: LocalReportingProject[]) => {
+    // Validate the whole next snapshot before the only persistent write.
+    parseLocalProjectImport(serializeLocalProjects(projects, new Date(0).toISOString()));
     storage.setItem(STORAGE_KEY, JSON.stringify(projects));
   };
 

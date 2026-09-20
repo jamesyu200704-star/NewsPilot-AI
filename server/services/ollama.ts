@@ -34,6 +34,7 @@ interface OllamaChatRequest {
   model: string;
   messages: Array<{ role: 'system' | 'user'; content: string }>;
   format: unknown;
+  numPredict?: number;
 }
 
 type JsonRecord = Record<string, unknown>;
@@ -79,7 +80,7 @@ export class OllamaClient {
           ...request,
           stream: false,
           think: false,
-          options: { temperature: 0 },
+          options: { temperature: 0, num_predict: request.numPredict ?? 2048 },
         }),
         signal: controller.signal,
       });

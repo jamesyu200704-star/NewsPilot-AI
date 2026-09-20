@@ -21,7 +21,8 @@ export const buildFinalEditorPrompt = (
 5. disposition 只表示是否可以进入采访报道阶段，不表示可以直接公开发布。
 6. 对每个 high 级事实发现，必须把 requiredAction 原文复制到 content.verificationChecklist 或 decision.finalChecklist。
 7. 对每个 high 级风险，必须把 description 原文复制到 content.risks，并把 mitigation 原文复制到 decision.finalChecklist。
-8. 只返回符合调用方 JSON Schema 的严格 JSON。`,
+8. 每个 angles[i].newsValueScore 必须保持为 0 到 5 之间的数字，不得改成 10 分制。
+9. 只返回符合调用方 JSON Schema 的严格 JSON。`,
   user: `方法论与证据上下文：
 ${JSON.stringify(context)}
 

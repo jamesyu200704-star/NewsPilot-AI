@@ -1,8 +1,10 @@
 import type {
   BriefInput,
+  EditorialRevision,
   GenerationResult,
   RetrievalContext,
   SearchProviderName,
+  VerificationReview,
 } from '../../shared/generation.js';
 import { buildPlanningContext } from '../../shared/新闻方法论.js';
 import { finalizePlanningResult } from '../../shared/新闻工作流.js';
@@ -31,6 +33,70 @@ interface RetrievalPipeline {
   retrieve(input: BriefInput): Promise<RetrievalContext>;
 }
 
+const mergeRequiredItems = (
+  requiredItems: string[],
+  existingItems: string[],
+  maximum: number,
+) => [...new Set([...requiredItems, ...existingItems])].slice(0, maximum);
+
+const removeInventedEvidenceReferences = (
+  verification: VerificationReview,
+  retrievalContext: RetrievalContext,
+): VerificationReview => {
+  const validEvidenceIds = new Set(
+    retrievalContext.evidence.map((item) => item.id),
+  );
+
+  return {
+    ...verification,
+    factCheck: {
+      ...verification.factCheck,
+      findings: verification.factCheck.findings.map((finding) => ({
+        ...finding,
+        evidenceIds: finding.evidenceIds.filter((id) =>
+          validEvidenceIds.has(id),
+        ),
+      })),
+    },
+  };
+};
+
+const applyVerificationGuardrails = (
+  editorial: EditorialRevision,
+  verification: VerificationReview,
+): EditorialRevision => {
+  const highRiskActions = verification.factCheck.findings
+    .filter((finding) => finding.severity === 'high')
+    .map((finding) => finding.requiredAction);
+  const highRisks = verification.riskReview.items.filter(
+    (item) => item.severity === 'high',
+  );
+
+  return {
+    content: {
+      ...editorial.content,
+      verificationChecklist: mergeRequiredItems(
+        highRiskActions,
+        editorial.content.verificationChecklist,
+        12,
+      ),
+      risks: mergeRequiredItems(
+        highRisks.map((item) => item.description),
+        editorial.content.risks,
+        10,
+      ),
+    },
+    decision: {
+      ...editorial.decision,
+      finalChecklist: mergeRequiredItems(
+        highRisks.map((item) => item.mitigation),
+        editorial.decision.finalChecklist,
+        12,
+      ),
+    },
+  };
+};
+
 export class GeneratorService {
   constructor(
     private readonly primaryProvider: GenerationProvider,
@@ -45,6 +111,14 @@ export class GeneratorService {
 
   get fallbackProviderName() {
     return this.fallbackProvider.name;
+  }
+
+  get editorialPrimaryProvider() {
+    return this.primaryProvider;
+  }
+
+  get editorialFallbackProvider() {
+    return this.fallbackProvider;
   }
 
   get retrievalProviderName(): SearchProviderName {
@@ -66,15 +140,25 @@ export class GeneratorService {
       const draft = await provider.generate(context);
       assertGenerationContent(draft);
       const usedVerificationFallback = !provider.verify;
-      const verification = provider.verify
+      const providerVerification = provider.verify
         ? await provider.verify(context, draft)
         : createMockVerificationReview(context, draft);
+      assertVerificationReview(providerVerification);
+      const verification = removeInventedEvidenceReferences(
+        providerVerification,
+        context.retrievalContext,
+      );
       assertVerificationReview(verification);
       assertVerificationEvidence(verification, context.retrievalContext);
       const usedEditorFallback = !provider.edit;
-      const editorial = provider.edit
+      const providerEditorial = provider.edit
         ? await provider.edit(context, draft, verification)
         : createMockEditorialRevision(context, draft, verification);
+      assertEditorialRevision(providerEditorial);
+      const editorial = applyVerificationGuardrails(
+        providerEditorial,
+        verification,
+      );
       assertEditorialRevision(editorial);
       assertEditorialResolvesVerification(editorial, verification);
 
